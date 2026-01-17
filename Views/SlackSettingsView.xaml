@@ -1,0 +1,215 @@
+<UserControl x:Class="SlappyHub.Views.SlackSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+   <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- モード選択 -->
+        <GroupBox Header="Channel通知の受信方法">
+            <StackPanel Orientation="Horizontal" Margin="8" >
+                <RadioButton Content="Socket Mode（Bot）"
+                             Margin="0,0,16,0"
+                             IsChecked="{Binding IsChannelSocket}"/>
+                <RadioButton Content="Windows通知"
+                             Margin="0,0,16,0"
+                             IsChecked="{Binding IsChannelNotify}"/>
+                <!--
+                <RadioButton Content="Master Nodeへ接続"
+                             IsChecked="{Binding IsChannelMasterNode}"/>
+                -->
+            </StackPanel>
+        </GroupBox>
+
+        <!-- モード別入力（切り替え） -->
+        <Grid Grid.Row="2">
+            <!-- Socket Mode -->
+            <GroupBox Header="Socket Mode 設定" Margin="0">
+                <GroupBox.Style>
+                    <Style TargetType="GroupBox">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsChannelSocket}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </GroupBox.Style>
+
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="280"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="App Token"/>
+                    <TextBox   Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
+                               Text="{Binding AppToken, UpdateSourceTrigger=PropertyChanged}"
+                               ToolTip="xapp- で始まるトークン"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Bot Token"/>
+                    <TextBox   Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
+                               Text="{Binding BotToken, UpdateSourceTrigger=PropertyChanged}"
+                               ToolTip="xoxb- で始まるトークン"/>
+                    
+                    <CheckBox Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="ダイレクトメッセージ(DM)も受信する（Windows通知）"
+                              IsChecked="{Binding EnableDirectMessage}"/>
+                    <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="許可を要求" Command="{Binding RequestWindowsNotifyAccessCommand}"/>
+                        <TextBlock Text="{Binding WindowsNotifyAccessStatus}" Margin="12,0,0,0"/>
+                    </StackPanel>
+                    <!-- 
+                    <CheckBox Grid.Row="6" Grid.ColumnSpan="2"
+                              Content="このPCを Master として動作させる"
+                              IsChecked="{Binding UseMasterNode}"/>
+                    -->
+                    <Grid Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" Margin="20,8,0,0">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding UseMasterNode}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="200"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="待受ポート"/>
+                        <TextBox   Grid.Row="0" Grid.Column="1"
+                                   Text="{Binding MasterListenPortText, UpdateSourceTrigger=PropertyChanged}"
+                                   ToolTip="例: 5001"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="パスワード"/>
+                        <PasswordBox Grid.Row="2" Grid.Column="1" PasswordChanged="MasterPassword_PasswordChanged"/>
+                    </Grid>
+
+                </Grid>
+            </GroupBox>
+
+            <!-- Windows通知 -->
+            <GroupBox Header="Windows通知 設定">
+                <GroupBox.Style>
+                    <Style TargetType="GroupBox">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsChannelNotify}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </GroupBox.Style>
+
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="12"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+                               Text="対象ワークスペース"/>
+                    <TextBox Grid.Row="0" Grid.Column="1"
+                             Text="{Binding CaptureWorkspace, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="複数WSを使っている場合の判別用。未指定でもOK"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="通知アクセス"/>
+                    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="許可を要求" Command="{Binding RequestWindowsNotifyAccessCommand}"/>
+                        <TextBlock Text="{Binding WindowsNotifyAccessStatus}" Margin="12,0,0,0"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Opacity="0.7" TextWrapping="Wrap">
+                        Slack が Windows通知を出したものだけ拾えます。Slack側の通知設定に依存します。
+                    </TextBlock>
+                </Grid>
+            </GroupBox>
+
+            <!-- Slave -->
+            <GroupBox Header="Slave 設定（Masterへ接続）">
+                <GroupBox.Style>
+                    <Style TargetType="GroupBox">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsChannelMasterNode}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </GroupBox.Style>
+
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="160"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Master IP/Host"/>
+                    <TextBox Grid.Row="0" Grid.Column="1"
+                             Text="{Binding MasterNodeHost, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="例: 192.168.1.10 / hostname.local"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Port"/>
+                    <TextBox Grid.Row="2" Grid.Column="1"
+                             Text="{Binding MasterNodePortText, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="Password"/>
+                    <PasswordBox Grid.Row="4" Grid.Column="1" PasswordChanged="SlavePassword_PasswordChanged"/>
+                </Grid>
+            </GroupBox>
+        </Grid>
+
+        <!-- ボタン -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="接続テスト" Width="100" Margin="0,0,8,0"
+                    Command="{Binding TestConnectionCommand}"
+                    IsEnabled="{Binding CanTest}"/>
+            <Button Content="OK" Width="80" Margin="0,0,8,0"
+                    IsDefault="True"
+                    Command="{Binding OkCommand}"/>
+            <Button Content="キャンセル" Width="80"
+                    IsCancel="True"
+                    Command="{Binding CancelCommand}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

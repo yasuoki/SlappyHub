@@ -1,2 +1,2 @@
-# SlappyHub
-SlappyHub Desktop 
+# SlappyBell_hub
+SlappyBell Desktop HUB

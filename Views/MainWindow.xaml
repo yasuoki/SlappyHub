@@ -1,0 +1,425 @@
+﻿<Window x:Class="SlappyHub.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SlappyHub"
+        xmlns:views="clr-namespace:SlappyHub.Views"
+        mc:Ignorable="d"
+        FontSize="12pt"
+        Title="MainWindow" Height="640" Width="1280">
+
+    <!-- ★追加：スライドイン/アウトのStoryboard -->
+    <Window.Resources>
+        <Storyboard x:Key="ShowSlackDrawer">
+            <DoubleAnimation Storyboard.TargetName="SlackDrawerTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="700" To="0"
+                             Duration="0:0:0.22"
+                             DecelerationRatio="0.9" />
+        </Storyboard>
+
+        <Storyboard x:Key="HideSlackDrawer">
+            <DoubleAnimation Storyboard.TargetName="SlackDrawerTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="0" To="700"
+                             Duration="0:0:0.18"
+                             AccelerationRatio="0.9" />
+        </Storyboard>
+        <Storyboard x:Key="ShowNotifyDrawer">
+            <DoubleAnimation Storyboard.TargetName="NotifyDrawerTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="700" To="0"
+                             Duration="0:0:0.22"
+                             DecelerationRatio="0.9" />
+        </Storyboard>
+
+        <Storyboard x:Key="HideNotifyDrawer">
+            <DoubleAnimation Storyboard.TargetName="NotifyDrawerTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="0" To="700"
+                             Duration="0:0:0.18"
+                             AccelerationRatio="0.9" />
+        </Storyboard>
+    </Window.Resources>
+
+    <!-- ★変更：Window直下をGridにしてOverlayを重ねられるようにする -->
+    <Grid x:Name="Root">
+
+        <!-- ====== 既存のUI（そのまま） ====== -->
+        <Viewbox Stretch="Uniform">
+            <Grid>
+                <!-- 背景 -->
+                <Image x:Name="MapImage" Source="pack://application:,,,/Assets/slappybell_ui.png" Stretch="Fill" />
+
+                <!-- ホットスポット -->
+                <Canvas Background="Transparent">
+                    <Canvas.Resources>
+                        <Style TargetType="{x:Type Shape}" x:Key="HotspotShapeStyle">
+                            <!-- ヒット判定用（Fillが無いと当たりにくい） -->
+                            <Setter Property="Fill" Value="#00FFFFFF" />
+                            <Setter Property="Stroke" Value="#00FFFFFF" />
+                            <Setter Property="StrokeThickness" Value="2" />
+                            <Setter Property="Cursor" Value="Hand" />
+
+                            <!-- 光らせるEffect -->
+                            <Setter Property="Effect" Value="{x:Null}" />
+
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <!-- 輪郭を強調 -->
+                                    <Setter Property="Stroke" Value="#AA4169e1" />
+                                    <Setter Property="StrokeThickness" Value="4" />
+
+                                    <!-- “発光っぽさ” -->
+                                    <Setter Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect ShadowDepth="0"
+                                                              BlurRadius="18"
+                                                              Opacity="0.9" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                        <Style TargetType="{x:Type Shape}">
+                            <Setter Property="Fill" Value="#00FFFFFF" />
+                            <Setter Property="Stroke" Value="#00FFFFFF" />
+                            <Setter Property="StrokeThickness" Value="2" />
+                            <Setter Property="Cursor" Value="Hand" />
+
+                            <!-- 吹き出しの既定スタイル -->
+                            <Setter Property="ToolTipService.InitialShowDelay" Value="0" />
+                            <Setter Property="ToolTipService.ShowDuration" Value="60000" />
+                            <Setter Property="ToolTipService.Placement" Value="Mouse" />
+                            <Setter Property="ToolTipService.HorizontalOffset" Value="18" />
+                            <Setter Property="ToolTipService.VerticalOffset" Value="18" />
+
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Stroke" Value="#AAFFFFFF" />
+                                    <Setter Property="StrokeThickness" Value="4" />
+                                    <Setter Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect ShadowDepth="0" BlurRadius="18" Opacity="0.9" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+
+                        <!-- ToolTip見た目（吹き出しっぽい枠） -->
+                        <Style TargetType="{x:Type ToolTip}">
+                            <Setter Property="OverridesDefaultStyle" Value="True" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type ToolTip}">
+                                        <Border Background="#EE1E1E1E" BorderBrush="#66FFFFFF" BorderThickness="1"
+                                                CornerRadius="10" Padding="10">
+                                            <ContentPresenter />
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Canvas.Resources>
+                    <Ellipse x:Name="slack_mask"
+                             Canvas.Left="100.2" Canvas.Top="71.7" Width="119.6" Height="119.6"
+                             Fill="#80AAAAAA"
+                             IsHitTestVisible="False"
+                             Visibility="{Binding IsSlackConnected, Converter={StaticResource InvertBoolToVisibilityConverter}}" />
+                    <Ellipse x:Name="slack_icon"
+                             Style="{StaticResource HotspotShapeStyle}"
+                             Canvas.Left="100.2" Canvas.Top="71.7" Width="119.6" Height="119.6"
+                             MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave"
+                             MouseLeftButtonUp="SlackIcon_Click">
+                        <Ellipse.ToolTip>
+                            <StackPanel>
+                                <TextBlock Text="Slackへの接続" FontWeight="SemiBold" Foreground="White" />
+                                <TextBlock Text="{Binding SlackConnectionText}" Foreground="#CCFFFFFF" />
+                            </StackPanel>
+                        </Ellipse.ToolTip>
+                    </Ellipse>
+
+                    <Ellipse x:Name="volume_mask"
+                             Canvas.Left="826.3" Canvas.Top="81.5" Width="106" Height="106"
+                             Fill="#80AAAAAA"
+                             IsHitTestVisible="False"
+                             Visibility="{Binding IsSlappyBellConnected, Converter={StaticResource InvertBoolToVisibilityConverter}}" />
+                    <Ellipse x:Name="volume_icon" Tag="volume_icon"
+                             Style="{StaticResource HotspotShapeStyle}"
+                             Canvas.Left="826.3" Canvas.Top="81.5" Width="106" Height="106"
+                             MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave" MouseLeftButtonUp="VolumeIcon_Click">
+                        <Ellipse.ToolTip>
+                            <StackPanel>
+                                <TextBlock Text="{Binding SoundVolumeText, StringFormat=通知音量 {0}%}" FontWeight="SemiBold" Foreground="White" />
+                                <TextBlock Text="{Binding SoundMuteText, StringFormat=ミュート {0}}" Foreground="#CCFFFFFF" />
+                            </StackPanel>
+                        </Ellipse.ToolTip>
+                    </Ellipse>
+                    <Popup x:Name="VolumePopup"
+                           PlacementTarget="{Binding ElementName=volume_icon}"
+                           Placement="Bottom"
+                           HorizontalOffset="0"
+                           VerticalOffset="8"
+                           AllowsTransparency="True"
+                           PopupAnimation="Fade"
+                           StaysOpen="False"
+                           Closed="VolumePopup_Closed">
+                        <Border Padding="12"
+                                CornerRadius="12"
+                                Background="#FF1F1F1F"
+                                BorderBrush="#33000000"
+                                BorderThickness="1">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="18" ShadowDepth="6" Opacity="0.25" />
+                            </Border.Effect>
+
+                            <Grid Width="260">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="10" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <!-- 上段：ミュート + ラベル + 現在値 -->
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <ToggleButton Grid.Column="0"
+                                                  Width="36" Height="28"
+                                                  Margin="0,0,10,0"
+                                                  IsChecked="{Binding SoundMute, Mode=TwoWay}">
+                                        <TextBlock FontSize="14"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <!-- 既定：非ミュート -->
+                                                    <Setter Property="Text" Value="🔊"/>
+
+                                                    <Style.Triggers>
+                                                        <!-- 親ToggleButtonのIsCheckedで切り替える（確実） -->
+                                                        <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                                                                     Value="True">
+                                                            <Setter Property="Text" Value="🔇"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </ToggleButton>
+
+
+                                    <TextBlock Grid.Column="1"
+                                               VerticalAlignment="Center"
+                                               Text="通知音量"
+                                               Foreground="#E6FFFFFF" />
+
+                                    <!-- 0~100% 表示（SoundVolumeTextが「100」なら StringFormat で %を付与） -->
+                                    <TextBlock Grid.Column="2"
+                                               VerticalAlignment="Center"
+                                               Foreground="#E6FFFFFF"
+                                               FontWeight="SemiBold"
+                                               Text="{Binding SoundVolumeText, StringFormat={}{0}%}" />
+                                </Grid>
+
+                                <!-- スライダー -->
+                                <Slider Grid.Row="2"
+                                        Minimum="0" Maximum="100"
+                                        Value="{Binding SoundVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         />
+                            </Grid>
+                        </Border>
+                    </Popup>
+
+                    <Ellipse x:Name="wifi_mask"
+                             Canvas.Left="979.6" Canvas.Top="81.5" Width="106" Height="106"
+                             Fill="#80AAAAAA"
+                             IsHitTestVisible="False"
+                             Visibility="{Binding IsWifiConnected, Converter={StaticResource InvertBoolToVisibilityConverter}}" />
+                    <Ellipse x:Name="wifi_icon"
+                             Style="{StaticResource HotspotShapeStyle}"
+                             Canvas.Left="979.6" Canvas.Top="81.5" Width="106" Height="106"
+                             MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave"  MouseLeftButtonUp="WiFiIcon_Click">
+                        <Ellipse.ToolTip>
+                            <StackPanel>
+                                <TextBlock Text="Wi-Fi接続" FontWeight="SemiBold" Foreground="White" />
+                                <TextBlock Text="{Binding WifiStatusText}" Foreground="#CCFFFFFF" />
+                            </StackPanel>
+                        </Ellipse.ToolTip>
+                    </Ellipse>
+                    <Popup x:Name="WiFiPopup"
+                           PlacementTarget="{Binding ElementName=wifi_icon}"
+                           Placement="Bottom"
+                           HorizontalOffset="0"
+                           VerticalOffset="8"
+                           AllowsTransparency="True"
+                           PopupAnimation="Fade"
+                           StaysOpen="False"
+                           Closed="WiFiPopup_Closed">
+                        <Border Padding="12"
+                                CornerRadius="12"
+                                Background="#FF1F1F1F"
+                                BorderBrush="#33000000"
+                                BorderThickness="1">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="18" ShadowDepth="6" Opacity="0.25" />
+                            </Border.Effect>
+
+                            <StackPanel MinWidth="280">
+
+                                <TextBlock Text="Wi-Fi 設定" Foreground="#E6FFFFFF" Margin="0,0,0,8"/>
+
+                                <TextBlock Text="SSID" Foreground="#E6FFFFFF" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding WifiSSID, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Margin="0,0,0,8"/>
+
+                                <TextBlock Text="パスワード" Foreground="#E6FFFFFF" Margin="0,0,0,4"/>
+                                <PasswordBox PasswordChanged="WiFiPassword_PasswordChanged"
+                                             Margin="0,0,0,8"/>
+
+                                <Button Content="接続"
+                                        Command="{Binding ConnectWiFiCommand}"
+                                        Margin="0,0,0,10"/>
+
+                                <TextBlock Text="{Binding WifiStatusText}" Foreground="#E6FFFFFF" TextWrapping="Wrap" Margin="0,8,0,8"/>
+
+                            </StackPanel>
+                        </Border>
+                    </Popup>
+                    
+                    <Ellipse x:Name="usb_mask"
+                             Canvas.Left="1133.3" Canvas.Top="81.5" Width="106" Height="106"
+                             Fill="#80AAAAAA"
+                             IsHitTestVisible="False"
+                             Visibility="{Binding IsSlappyBellConnected, Converter={StaticResource InvertBoolToVisibilityConverter}}" />
+                    <Ellipse x:Name="usb_icon" Tag="usb_icon"
+                             Style="{StaticResource HotspotShapeStyle}"
+                             Canvas.Left="1133.3" Canvas.Top="81.5" Width="106" Height="106"
+                             MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave">
+                        <Ellipse.ToolTip>
+                            <StackPanel>
+                                <TextBlock Text="SlappyBellの接続" FontWeight="SemiBold" Foreground="White" />
+                                <TextBlock Text="{Binding ConnectSlappyBell}" Foreground="#CCFFFFFF" />
+                            </StackPanel>
+                        </Ellipse.ToolTip>
+                    </Ellipse>
+
+                    <Path x:Name="Fig0"
+                          Style="{StaticResource HotspotShapeStyle}"
+                          Data="m 198.54734,271.25755 14.92983,-0.58168 11.63364,2.13283 9.69469,4.26567 7.94965,9.30691 2.71452,7.94965 1.16336,6.39849 -0.77558,5.04125 11.05195,2.52062 9.50081,4.65345 8.14354,7.36797 4.84735,8.33743 3.29619,12.797 -0.77557,7.75576 -4.07177,7.17407 -7.75576,5.04124 -7.36797,3.2962 -6.59239,2.13283 1.16336,8.33744 0.38779,12.02142 -1.93894,8.53133 -3.87788,9.88859 -7.36796,5.23513 -9.30691,3.2962 -6.98018,0.38779 -3.1023,-0.58168 -4.65346,4.26566 -7.17407,3.2962 -10.47027,0.77557 -5.81682,-2.9084 -5.42903,-5.23514 -2.52062,-6.3985 -1.35725,-8.91912 -0.58169,-4.84734 -8.53133,-0.1939 -6.78628,-3.68398 -7.36797,-8.91912 v -7.75576 l 2.13283,-8.14354 5.42903,-7.94965 7.56186,-4.84735 9.6947,-3.29619 1.55115,-1.35726 2.32672,-10.27638 0.38779,-8.33743 -1.74504,-7.36797 -8.53133,-0.58168 -10.27638,-0.77558 -8.72522,-5.23513 -3.2962,-8.14355 0.38779,-9.69469 5.62292,-11.05195 7.36797,-6.5924 10.27637,-5.04124 8.53133,-2.52062 z"
+                          MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave" MouseLeftButtonUp="SlotIcon0_Click">
+                        <Path.ToolTip>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Slot0Channel}" Foreground="#CCFFFFFF" />
+                            </StackPanel>
+                        </Path.ToolTip>
+                    </Path>
+                    <Path x:Name="Fig1"
+                          Style="{StaticResource HotspotShapeStyle}"
+                          Data="m 382.55265,306.93403 15.7054,1.55115 16.28709,5.62292 12.99089,9.11302 9.5008,11.82752 4.84735,10.47027 2.71451,15.51151 -1.55115,12.797 -4.84735,9.6947 -9.3069,11.05195 -8.72523,6.01071 -15.51151,6.01071 -4.26567,0.77557 -0.58168,7.36797 -7.75575,5.42903 -8.33744,2.52062 -8.91912,-1.55115 -6.98018,-2.90841 -2.32673,-6.01071 -0.96947,-7.17407 -11.63363,-3.49009 -13.18478,-8.33744 -10.85806,-12.797 -3.49009,-8.33743 -1.55115,-14.73594 2.52062,-13.57257 5.42903,-12.02142 8.72522,-9.88859 10.85806,-8.14355 12.02142,-4.45955 11.05195,-2.13284 z"
+                          MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave" MouseLeftButtonUp="SlotIcon1_Click">
+                        <Path.ToolTip>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Slot1Channel}" Foreground="#CCFFFFFF" />
+                            </StackPanel>
+                        </Path.ToolTip>
+                    </Path>
+                    <Path x:Name="Fig2"
+                          Style="{StaticResource HotspotShapeStyle}"
+                          Data="m 520.994,421.18252 -2.74207,-14.25878 6.03256,-6.03257 v -13.71036 l -20.29135,-10.41988 -13.71036,-20.83976 v -21.93659 l 9.32305,-23.58184 12.61354,-19.19451 20.83976,-9.87147 23.58183,-1.09683 18.09769,9.32305 17.54927,18.09769 9.32305,22.485 1.09683,18.6461 -5.48415,18.09769 -8.22622,10.41988 -15.90403,8.22622 -10.96829,3.29049 1.09683,13.71037 4.93573,8.22622 -2.19366,14.25878 -7.12939,4.93574 -15.90403,3.29048 -13.71037,-3.8389 z"
+                          MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave" MouseLeftButtonUp="SlotIcon2_Click">
+                        <Path.ToolTip>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Slot2Channel}" Foreground="#CCFFFFFF" />
+                            </StackPanel>
+                        </Path.ToolTip>
+                    </Path>
+                    <Path x:Name="Fig3"
+                          Style="{StaticResource HotspotShapeStyle}"
+                          Data="m 699.76305,285.79959 13.37868,0.38779 14.54204,2.13284 15.31762,4.07177 13.96036,8.53133 7.56186,10.47027 1.16336,9.3069 -4.07177,7.17408 -8.33744,7.36797 -8.53133,4.07177 -6.01071,2.52062 -2.32672,2.71451 -0.38779,4.65346 0.38779,8.91912 5.04124,13.96036 3.87787,12.02142 1.74505,13.57257 0.58168,13.37868 0.1939,11.63364 -1.93895,10.08247 -9.50079,7.94965 -10.27638,3.49009 -12.40921,1.74505 -12.02142,-1.16337 -13.37868,-5.04124 -5.42903,-4.45956 -3.68398,-12.21531 -3.68399,-17.25656 -0.19389,-13.37868 0.58168,-15.12372 0.58168,-12.40921 -1.74504,-7.94965 -0.96947,-9.69469 -1.93894,-4.84735 -9.30691,-3.87788 -10.27637,-6.3985 -6.59239,-7.56186 -1.74505,-8.53133 1.93894,-6.98018 3.1023,-5.81682 6.20461,-5.23513 9.88858,-5.42903 13.18479,-4.07177 11.63363,-1.93894 z"
+                          MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave" MouseLeftButtonUp="SlotIcon3_Click">
+                        <Path.ToolTip>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Slot3Channel}" Foreground="#CCFFFFFF" />
+                            </StackPanel>
+                        </Path.ToolTip>
+                    </Path>
+                    <Path x:Name="Fig4"
+                          Style="{StaticResource HotspotShapeStyle}"
+                          Data="m 880.85994,298.98438 13.96036,1.74504 13.37868,4.26567 8.72523,6.01071 9.11301,9.69469 5.23514,9.30691 2.9084,12.02142 -1.93893,11.82753 -4.84735,10.27638 -7.17408,7.56186 -5.23513,2.52062 0.38779,34.12532 -0.77558,12.99089 -2.32673,15.12373 -3.29619,6.01071 -11.05195,6.78628 -11.24585,1.74505 -13.96036,0.38779 -12.797,-4.84735 -6.98018,-6.2046 -3.49009,-6.98018 -2.52062,-23.46117 -1.55115,-20.55275 2.32673,-21.32833 -6.01071,-5.23513 -5.23514,-9.11301 -2.32672,-10.27638 0.19389,-10.47027 4.07177,-9.11301 6.20461,-8.33744 7.94965,-7.36797 10.85805,-5.42903 9.5008,-2.71451 z"
+                          MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave" MouseLeftButtonUp="SlotIcon4_Click">
+                        <Path.ToolTip>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Slot4Channel}" Foreground="#CCFFFFFF" />
+                            </StackPanel>
+                        </Path.ToolTip>
+                    </Path>
+                    <Path x:Name="Fig5"
+                          Style="{StaticResource HotspotShapeStyle}"
+                          Data="m 1062.9263,317.59819 13.3787,2.71452 11.8275,3.29619 12.797,4.84735 13.1848,8.91912 7.5619,5.62292 8.9191,10.85806 5.0412,10.47027 2.5206,12.02142 -0.7755,8.91912 -4.8474,10.66416 -9.113,8.33744 -10.2764,6.98018 -15.5115,4.65346 -11.6336,1.35725 -0.7756,12.797 -2.7145,9.88859 -5.8168,9.88859 -2.3268,3.49009 -8.5313,4.07177 -10.2764,0.58168 -9.8885,-1.74505 -5.8169,-4.65345 -4.4595,-6.3985 -3.2962,-12.21531 -1.5512,-14.54204 0.1939,-11.24585 -11.0519,-5.42903 -15.5115,-10.85806 -7.94969,-9.5008 -5.81682,-12.02142 -0.19389,-12.02142 5.23513,-12.99089 8.33747,-11.24585 11.8275,-7.75575 14.7359,-4.65346 13.1848,-1.93893 z"
+                          MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave" MouseLeftButtonUp="SlotIcon5_Click">
+                        <Path.ToolTip>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Slot5Channel}" Foreground="#CCFFFFFF" />
+                            </StackPanel>
+                        </Path.ToolTip>
+                    </Path>
+                </Canvas>
+            </Grid>
+        </Viewbox>
+
+        <!-- ====== SlackSettingsView Overlay ====== -->
+        <Grid x:Name="SlackOverlay"
+              Visibility="Collapsed"
+              Background="#80000000"
+              Panel.ZIndex="999"
+              MouseLeftButtonUp="SlackOverlay_BackgroundClick">
+
+            <!-- ドロワー本体（下からスライドイン） -->
+            <Border x:Name="SlackDrawer"
+                    Background="White"
+                    CornerRadius="16,16,0,0"
+                    VerticalAlignment="Bottom"
+                    Margin="12"
+                    Padding="16"
+                    MaxWidth="980"
+                    MouseLeftButtonUp="SlackDrawer_Click">
+                <Border.RenderTransform>
+                    <TranslateTransform x:Name="SlackDrawerTransform" Y="700" />
+                </Border.RenderTransform>
+
+                <!-- ここに既に作成済みの UserControl を差し込む -->
+                <views:SlackSettingsView DataContext="{Binding SlackSettings}" />
+            </Border>
+        </Grid>
+        <!-- ====== NotifySettingsView Overlay ====== -->
+        <Grid x:Name="NotifyOverlay"
+              Visibility="Collapsed"
+              Background="#80000000"
+              Panel.ZIndex="999"
+              MouseLeftButtonUp="NotifyOverlay_BackgroundClick">
+
+            <!-- ドロワー本体（下からスライドイン） -->
+            <Border x:Name="NotifyDrawer"
+                    Background="White"
+                    CornerRadius="16,16,0,0"
+                    VerticalAlignment="Bottom"
+                    Margin="12"
+                    Padding="16"
+                    MaxWidth="980"
+                    MouseLeftButtonUp="NotifyDrawer_Click">
+                <Border.RenderTransform>
+                    <TranslateTransform x:Name="NotifyDrawerTransform" Y="700" />
+                </Border.RenderTransform>
+
+                <views:NotifySettingsView DataContext="{Binding NotifySettings}" />
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

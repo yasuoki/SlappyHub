@@ -1,0 +1,22 @@
+﻿<Application x:Class="SlappyHub.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:SlappyHub"
+             xmlns:common="clr-namespace:SlappyHub.Common"
+             xmlns:views="clr-namespace:SlappyHub.Views">
+    <Application.Resources>
+        <common:BoolToVisibilityConverterEx x:Key="BoolToVisibilityConverterEx" />
+        <common:InvertBoolConverter x:Key="InvertBoolConverter" />
+        <common:InvertBoolToVisibilityConverter x:Key="InvertBoolToVisibilityConverter" />
+        <common:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        <common:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter" />
+        <common:EnumEqualsToBoolConverter x:Key="EnumEqualsToBoolConverter" />
+        <common:EnumEqualsToVisibilityConverter x:Key="EnumEqualsToVisibilityConverter" />
+        <common:GreaterThanZeroToVisibilityConverter x:Key="GreaterThanZeroToVisibilityConverter" />
+        <common:InvertBoolToVisibilityConverter x:Key="InvertBoolToVisibility"/>
+        <Style TargetType="{x:Type Window}">
+            <Setter Property="FontFamily" Value="Arial" />
+            <Setter Property="FontSize" Value="30pt" />
+        </Style>
+    </Application.Resources>
+</Application>
