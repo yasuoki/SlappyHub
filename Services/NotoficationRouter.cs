@@ -44,7 +44,7 @@ public sealed class NotificationRouter
 				}
 			}
 		}
-		_watchDirectMessages = settings.EnableDirectMessage;
+		_watchDirectMessages = settings.EnableDirectMessage || settings.ChannelSource == ChannelSourceMode.WindowsNotify;
 		_watchChannels = watchChannels;
 	}
 

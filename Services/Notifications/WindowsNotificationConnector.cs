@@ -198,7 +198,11 @@ public class WindowsNotificationConnector
 			else
 			{
 				if (_captureChannelMessage)
+				{
+					if(title.StartsWith("#"))
+						title = title.Substring(1).Trim();
 					ev = new NotificationEvent("notify", title, sender, body);
+				}
 			}
 		}
 		return ev;

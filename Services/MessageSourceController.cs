@@ -8,6 +8,7 @@ namespace SlappyHub.Services;
 
 public class MessageSourceController
 {
+	private bool _started;
 	private SettingsStore _settingsStore;
 	private SlackConnector _slackConnector;
 	private WindowsNotificationConnector _windowsNotificationConnector;
@@ -23,32 +24,34 @@ public class MessageSourceController
 
 		_settingsStore.Changed += async (sender,newSettings) =>
 		{
-			var ooldSettings = _settings;
+			var oldSettings = _settings;
 			_settings = newSettings;
-			if (ooldSettings.ChannelSource != newSettings.ChannelSource)
+			if (_started)
 			{
-				if (ooldSettings.ChannelSource == ChannelSourceMode.Socket)
+				if (oldSettings.ChannelSource != newSettings.ChannelSource)
 				{
-					_slackConnector.Stop();
-				}
+					if (oldSettings.ChannelSource == ChannelSourceMode.Socket)
+					{
+						_slackConnector.Stop();
+					}
 
-				if (ooldSettings.ChannelSource == ChannelSourceMode.WindowsNotify)
-				{
-					if (!ooldSettings.EnableDirectMessage)
+					if (oldSettings.ChannelSource == ChannelSourceMode.WindowsNotify || oldSettings.EnableDirectMessage)
+					{
 						_windowsNotificationConnector.Stop();
-				}
+					}
 
-				if (newSettings.ChannelSource == ChannelSourceMode.Socket)
-				{
-					await _slackConnector.Start(newSettings.SlackAppToken, newSettings.SlackBotToken);
-				}
+					if (newSettings.ChannelSource == ChannelSourceMode.Socket)
+					{
+						await _slackConnector.Start(newSettings.SlackAppToken, newSettings.SlackBotToken);
+					}
 
-				if (newSettings.ChannelSource == ChannelSourceMode.WindowsNotify || newSettings.EnableDirectMessage)
-				{
-					await _windowsNotificationConnector.Start(
-						newSettings.ChannelSource == ChannelSourceMode.WindowsNotify, 
-						newSettings.EnableDirectMessage,
-						newSettings.CaptureWorkspace);
+					if (newSettings.ChannelSource == ChannelSourceMode.WindowsNotify || newSettings.EnableDirectMessage)
+					{
+						await _windowsNotificationConnector.Start(
+							newSettings.ChannelSource == ChannelSourceMode.WindowsNotify,
+							newSettings.EnableDirectMessage,
+							newSettings.CaptureWorkspace);
+					}
 				}
 			}
 		};
@@ -95,5 +98,6 @@ public class MessageSourceController
 				MessageBoxImage.Error);
 			});
 		}
+		_started = true;
 	}
 }
