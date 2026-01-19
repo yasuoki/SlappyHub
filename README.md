@@ -2,6 +2,7 @@
 ## About
 **もう、Slackのメッセージを見落として、対応が遅れたり後で気まずくなることはありません**  
 SlappyHubは、Slackのメッセージが届くとデスクトップガジェット(ハードウェア）SlappyBellと連動し、LEDの発光と音で通知するアプリケーションです。  
+[SlappyBell リポジトリ](https://github.com/yasuoki/SlappyBell)
 
 SlappyHubアプリケーションのUI  
 <img src="img/fig0.png" width="80%"><br>  
