@@ -7,7 +7,7 @@
         xmlns:views="clr-namespace:SlappyHub.Views"
         mc:Ignorable="d"
         FontSize="12pt"
-        Title="MainWindow" Height="640" Width="1280">
+        Title="SlappyHub" Height="640" Width="1280">
 
     <!-- ★追加：スライドイン/アウトのStoryboard -->
     <Window.Resources>
