@@ -113,6 +113,19 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 		}
 	}
 
+	private async Task TestLedPattern()
+	{
+		if (_slappyDevice != null && SelectedLedPattern != null)
+		{
+			await _slappyDevice.LedOn(SlotIndex, SelectedLedPattern?.Id);
+		}
+	}
+	private async Task StopLedPattern()
+	{
+		if (_slappyDevice != null)
+			await _slappyDevice.LedOff(SlotIndex);
+	}
+
 	// =========================
 	// Sound
 	// =========================
@@ -685,6 +698,8 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 	public ICommand OkCommand { get; }
 	public ICommand CancelCommand { get; }
 
+	public ICommand TestLedPatternCommand { get; }
+	public ICommand StopLedPatternCommand { get; }
 	public ICommand PlayDeviceSoundCommand { get; }
 	public ICommand DeleteDeviceSoundFileCommand { get; }
 	public ICommand BrowseUploadSoundFileCommand { get; }
@@ -746,99 +761,103 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 
 		// LED presets（例）
 		var pat = new LedPresetBuilder();
-		pat.AddSegment(0xff0000, 1000, LinkType.Smooth);
-		pat.AddSegment(0x00ff00, 1000, LinkType.Smooth);
-		pat.AddSegment(0x0000ff, 1000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("ff0000>00ff00>0000ff>", "", pat.Build()));
+		pat.AddSegment(0xcc0000, 1000, LinkType.Smooth);
+		pat.AddSegment(0x00cc00, 1000, LinkType.Smooth);
+		pat.AddSegment(0x0000cc, 1000, LinkType.Smooth);
+		LedPatterns.Add(new LedPatternPreset("cc0000>00cc00>0000cc>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0xff0000, 2000, LinkType.Smooth);
-		pat.AddSegment(0x00ff00, 2000, LinkType.Smooth);
-		pat.AddSegment(0x0000ff, 2000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("ff0000:2000>00ff00:2000>0000ff:2000>", "", pat.Build()));
+		pat.AddSegment(0xcc0000, 2000, LinkType.Smooth);
+		pat.AddSegment(0x00cc00, 2000, LinkType.Smooth);
+		pat.AddSegment(0x0000cc, 2000, LinkType.Smooth);
+		LedPatterns.Add(new LedPatternPreset("cc0000:2000>00cc00:2000>0000cc:2000>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0xff0000, 1000, LinkType.Smooth);
-		pat.AddSegment(0x00ff00, 1000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("ff0000>00ff00>", "", pat.Build()));
+		pat.AddSegment(0xcc0000, 1000, LinkType.Smooth);
+		pat.AddSegment(0x00cc00, 1000, LinkType.Smooth);
+		LedPatterns.Add(new LedPatternPreset("cc0000>00cc00>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0xff0000, 2000, LinkType.Smooth);
-		pat.AddSegment(0x00ff00, 2000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("ff0000:2000>00ff00:2000>", "", pat.Build()));
+		pat.AddSegment(0xcc0000, 2000, LinkType.Smooth);
+		pat.AddSegment(0x00cc00, 2000, LinkType.Smooth);
+		LedPatterns.Add(new LedPatternPreset("cc0000:2000>00cc00:2000>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0x00ff00, 1000, LinkType.Smooth);
-		pat.AddSegment(0x0000ff, 1000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("00ff00>0000ff>", "", pat.Build()));
+		pat.AddSegment(0x00cc00, 1000, LinkType.Smooth);
+		pat.AddSegment(0x0000cc, 1000, LinkType.Smooth);
+		LedPatterns.Add(new LedPatternPreset("00cc00>0000cc>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0x00ff00, 2000, LinkType.Smooth);
-		pat.AddSegment(0x0000ff, 2000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("00ff00:2000>0000ff:2000>", "", pat.Build()));
+		pat.AddSegment(0x00cc00, 2000, LinkType.Smooth);
+		pat.AddSegment(0x0000cc, 2000, LinkType.Smooth);
+		LedPatterns.Add(new LedPatternPreset("00cc00:2000>0000cc:2000>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0x0000ff, 1000, LinkType.Smooth);
-		pat.AddSegment(0xff0000, 1000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("0000ff>ff0000>", "", pat.Build()));
+		pat.AddSegment(0x0000cc, 1000, LinkType.Smooth);
+		pat.AddSegment(0xcc0000, 1000, LinkType.Smooth);
+		LedPatterns.Add(new LedPatternPreset("0000cc>cc0000>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0x0000ff, 2000, LinkType.Smooth);
-		pat.AddSegment(0xff0000, 2000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("0000ff:2000>ff0000:2000>", "", pat.Build()));
+		pat.AddSegment(0x0000cc, 2000, LinkType.Smooth);
+		pat.AddSegment(0xcc0000, 2000, LinkType.Smooth);
+		LedPatterns.Add(new LedPatternPreset("0000cc:2000>cc0000:2000>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0xff0000, 1000, LinkType.Smooth);
+		pat.AddSegment(0xcc0000, 1000, LinkType.Smooth);
 		pat.AddSegment(0x000000, 100, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("ff0000>000000:100>,", "", pat.Build()));
+		LedPatterns.Add(new LedPatternPreset("cc0000>000000:100>,", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0xff0000, 2000, LinkType.Smooth);
+		pat.AddSegment(0xcc0000, 2000, LinkType.Smooth);
 		pat.AddSegment(0x000000, 2000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("ff0000:2000>000000:2000>,", "", pat.Build()));
+		LedPatterns.Add(new LedPatternPreset("cc0000:2000>000000:2000>,", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0x00ff00, 1000, LinkType.Smooth);
+		pat.AddSegment(0x00cc00, 1000, LinkType.Smooth);
 		pat.AddSegment(0x000000, 100, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("00ff00>000000:100>", "", pat.Build()));
+		LedPatterns.Add(new LedPatternPreset("00cc00>000000:100>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0x00ff00, 2000, LinkType.Smooth);
+		pat.AddSegment(0x00cc00, 2000, LinkType.Smooth);
 		pat.AddSegment(0x000000, 2000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("00ff00:2000>000000:2000>", "", pat.Build()));
+		LedPatterns.Add(new LedPatternPreset("00cc00:2000>000000:2000>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0x0000ff, 1000, LinkType.Smooth);
+		pat.AddSegment(0x0000cc, 1000, LinkType.Smooth);
 		pat.AddSegment(0x000000, 100, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("0000ff>000000:100>", "", pat.Build()));
+		LedPatterns.Add(new LedPatternPreset("0000cc>000000:100>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0x0000ff, 2000, LinkType.Smooth);
+		pat.AddSegment(0x0000cc, 2000, LinkType.Smooth);
 		pat.AddSegment(0x000000, 2000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("0000ff:2000>000000:2000>", "", pat.Build()));
+		LedPatterns.Add(new LedPatternPreset("0000cc:2000>000000:2000>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0xffff00, 1000, LinkType.Smooth);
+		pat.AddSegment(0xcccc00, 1000, LinkType.Smooth);
 		pat.AddSegment(0x000000, 100, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("ffff00>000000:100>", "", pat.Build()));
+		LedPatterns.Add(new LedPatternPreset("cccc00>000000:100>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0xffff00, 2000, LinkType.Smooth);
+		pat.AddSegment(0xcccc00, 2000, LinkType.Smooth);
 		pat.AddSegment(0x000000, 2000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("ffff00:2000>000000:2000>", "", pat.Build()));
+		LedPatterns.Add(new LedPatternPreset("cccc00:2000>000000:2000>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0x00ffff, 1000, LinkType.Smooth);
+		pat.AddSegment(0x00cccc, 1000, LinkType.Smooth);
 		pat.AddSegment(0x000000, 100, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("00ffff>000000:100>", "", pat.Build()));
+		LedPatterns.Add(new LedPatternPreset("00cccc>000000:100>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0x00ffff, 2000, LinkType.Smooth);
+		pat.AddSegment(0x00cccc, 2000, LinkType.Smooth);
 		pat.AddSegment(0x000000, 2000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("00ffff:2000>000000:2000>", "", pat.Build()));
+		LedPatterns.Add(new LedPatternPreset("00cccc:2000>000000:2000>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0xff00ff, 1000, LinkType.Smooth);
+		pat.AddSegment(0xcc00cc, 1000, LinkType.Smooth);
 		pat.AddSegment(0x000000, 100, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("ff00ff>000000:100>", "", pat.Build()));
+		LedPatterns.Add(new LedPatternPreset("cc00cc>000000:100>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0xff00ff, 2000, LinkType.Smooth);
+		pat.AddSegment(0xcc00cc, 2000, LinkType.Smooth);
 		pat.AddSegment(0x000000, 2000, LinkType.Smooth);
-		LedPatterns.Add(new LedPatternPreset("ff00ff:2000>000000:2000>", "", pat.Build()));
+		LedPatterns.Add(new LedPatternPreset("cc00cc:2000>000000:2000>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0xff0000, 600, LinkType.Step);
-		pat.AddSegment(0x0000ff, 600, LinkType.Step);
-		LedPatterns.Add(new LedPatternPreset("ff0000:600>0000ff:600>", "", pat.Build()));
+		pat.AddSegment(0x3333CC, 2000, LinkType.Smooth);
+		pat.AddSegment(0x000000, 2000, LinkType.Smooth);
+		LedPatterns.Add(new LedPatternPreset("3333CC:2000>000000:2000>", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0x00ff00, 600, LinkType.Step);
-		pat.AddSegment(0x0000ff, 600, LinkType.Step);
-		LedPatterns.Add(new LedPatternPreset("00ff00:600>0000ff:600>", "", pat.Build()));
+		pat.AddSegment(0xcc0000, 600, LinkType.Step);
+		pat.AddSegment(0x0000cc, 600, LinkType.Step);
+		LedPatterns.Add(new LedPatternPreset("cc0000:600,0000cc:600,", "", pat.Build()));
 		pat = new LedPresetBuilder();
-		pat.AddSegment(0x00ff00, 600, LinkType.Step);
-		pat.AddSegment(0xff0000, 600, LinkType.Step);
-		LedPatterns.Add(new LedPatternPreset("00ff00:600>ff0000:600>", "", pat.Build()));
+		pat.AddSegment(0x00cc00, 600, LinkType.Step);
+		pat.AddSegment(0x0000cc, 600, LinkType.Step);
+		LedPatterns.Add(new LedPatternPreset("00cc00:600,0000cc:600,", "", pat.Build()));
+		pat = new LedPresetBuilder();
+		pat.AddSegment(0x00cc00, 600, LinkType.Step);
+		pat.AddSegment(0xcc0000, 600, LinkType.Step);
+		LedPatterns.Add(new LedPatternPreset("00ff00:600,ff0000:600,", "", pat.Build()));
 		SelectedLedPattern = LedPatterns[0];
 
 		// Sound choices（URL常設 + none。デバイスmp3は後でRefreshで追加）
@@ -847,6 +866,8 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 		AvailableSounds.Add(SoundChoice.None());
 		SelectedSound = AvailableSounds[0];
 
+		TestLedPatternCommand = new RelayCommand(async () => { await TestLedPattern(); });
+		StopLedPatternCommand = new RelayCommand(async () => { await StopLedPattern(); });
 		PlayDeviceSoundCommand = new AsyncRelayCommand(async () => { await PlayDeviceSound(); });
 
 		DeleteDeviceSoundFileCommand = new AsyncRelayCommand(async () => { await DeleteDeviceSoundFile(); });

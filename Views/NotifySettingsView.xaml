@@ -48,6 +48,8 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="250" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="40" />
+                    <ColumnDefinition Width="40" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="LED 発光パターン（LedPattern）" FontWeight="SemiBold" />
                 <!-- 本体ComboBox：ドロップダウン表示を担当 -->
@@ -91,6 +93,19 @@
                         </Style>
                     </ContentControl.Style>
                 </ContentControl>
+                <Button Grid.Row="0" Grid.Column="2" Content="▶️" BorderThickness="0"
+                        Background="Transparent" FontSize="14pt" FontFamily="Segoe UI Emoji"
+                        VerticalAlignment="Center" Command="{Binding TestLedPatternCommand}"
+                        Foreground="#0078D4"
+                        ToolTip="LEDのテスト発光">
+                </Button>
+                <Button Grid.Row="0" Grid.Column="3" Content="⏹️" BorderThickness="0"
+                        Background="Transparent" FontSize="14pt" FontFamily="Segoe UI Emoji"
+                        VerticalAlignment="Center" Command="{Binding StopLedPatternCommand}"
+                        Foreground="#cc0000"
+                        ToolTip="LEDのテスト停止">
+                </Button>
+
             </Grid>
 
             <!-- Sound -->
