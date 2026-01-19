@@ -37,4 +37,30 @@ Windowsの通知をキャプチャして動作するので、設定は簡単で�
 - .NET 9.0
 - Windows版 Slack デスクトップアプリケーション（ブラウザ版は非対応）
 
+## Slack ボット連携
+Slackのボットとして接続（Events API / Socket Mode）するためには、https://api.slack.com/apps/ からAppを作成し、接続トークンをSlappyHubに設定する必要があります。  
+トークンはxapp-で始まるApp-Levelトークンと、xoxb-で始まるBot User OAuthトークンが必要になります。
+トークン発行など詳細手順は、Slackの公式ページの説明を参照してください。  
+
+App-Levelトークンは`connections:write`スコープを与えてください。
+
+SlappyHubの動作には、OAuthトークンに次の権限が必要です。
+```
+app_mentions:read
+channels:history
+groups:history
+im:history
+mpim:history
+channels:read
+groups:read
+mpim:read
+reactions:read
+users:read
+```
+
+また、通知したいチャンネルにSlappyHubボットを連携される必要があります。Slackアプリのチャンネル詳細から、インテグレーションにSlappyHubのAppを追加してください。
+
+※ Slackはひとつのワークスペースに同時に接続するソケットモードコネクションを制限しています。多くの人が参加するワークスペースでは接続数の制約にかかる可能性があります。
+
+
 
