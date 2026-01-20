@@ -83,43 +83,44 @@ public class MainViewModel : INotifyPropertyChanged
 
 	public string _wifiSsid;
 
-	public string WifiSSID
+	public string WiFiSSID
 	{
 		get => _wifiSsid;
 		set
 		{
 			_wifiSsid = value;
-			OnPropertyChanged(nameof(WifiSSID));
+			OnPropertyChanged(nameof(WiFiSSID));
 		}
 	}
 
 	public string _wifiPassword;
 
-	public string WifiPassword
+	public string WiFiPassword
 	{
 		get => _wifiPassword;
 		set
 		{
 			_wifiPassword = value;
-			OnPropertyChanged(nameof(WifiPassword));
+			OnPropertyChanged(nameof(WiFiPassword));
 		}
 	}
+	
 
-	private string _wifiStatusTextText = "未接続";
+	public string WiFiButtonText => WiFiStatusText == "接続" ? "切断" : "接続";
 
-	public string WifiStatusText
+	public string WiFiStatusText
 	{
 		get
 		{
 			switch ((ReceiveMessage.ResultCode)_wifiStatusCode)
 			{
-				case ReceiveMessage.ResultCode.WifiConnected:
+				case ReceiveMessage.ResultCode.WiFiConnected:
 					return "接続";
-				case ReceiveMessage.ResultCode.WifiSsidNotFound:
+				case ReceiveMessage.ResultCode.WiFiSsidNotFound:
 					return "SSIDが見つかりません";
-				case ReceiveMessage.ResultCode.WifiAuthFail:
+				case ReceiveMessage.ResultCode.WiFiAuthFail:
 					return "認証エラー";
-				case ReceiveMessage.ResultCode.WifiDisconnected:
+				case ReceiveMessage.ResultCode.WiFiDisconnected:
 					return "切断";
 				default:
 					return "未接続";
@@ -127,11 +128,11 @@ public class MainViewModel : INotifyPropertyChanged
 		}
 	}
 
-	public bool IsWifiConnected => _wifiStatusCode == (int)ReceiveMessage.ResultCode.WifiConnected;
+	public bool IsWiFiConnected => _slappyDevice != null && _wifiStatusCode == (int)ReceiveMessage.ResultCode.WiFiConnected;
 
-	private int _wifiStatusCode = (int)ReceiveMessage.ResultCode.WifiDisconnected;
+	private int _wifiStatusCode = (int)ReceiveMessage.ResultCode.WiFiDisconnected;
 
-	public int WifiStatusCode
+	public int WiFiStatusCode
 	{
 		get => _wifiStatusCode;
 		set
@@ -139,9 +140,10 @@ public class MainViewModel : INotifyPropertyChanged
 			if (_wifiStatusCode != value)
 			{
 				_wifiStatusCode = value;
-				OnPropertyChanged(nameof(WifiStatusCode));
-				OnPropertyChanged(nameof(WifiStatusText));
-				OnPropertyChanged(nameof(IsWifiConnected));
+				OnPropertyChanged(nameof(WiFiStatusCode));
+				OnPropertyChanged(nameof(WiFiStatusText));
+				OnPropertyChanged(nameof(IsWiFiConnected));
+				OnPropertyChanged(nameof(WiFiButtonText));
 			}
 		}
 	}
@@ -172,7 +174,7 @@ public class MainViewModel : INotifyPropertyChanged
 
 	public ICommand OpenSlackSettingsCommand { get; }
 	public ICommand OpenNotifySettingsCommand { get; }
-	public ICommand ConnectWiFiCommand { get; }
+	public ICommand WiFiActionCommand { get; }
 
 	public MainViewModel(SettingsStore settingsStore,
 		SlappyBellController slappyBellController, SlackSettingsViewModel slackSettings,
@@ -181,8 +183,8 @@ public class MainViewModel : INotifyPropertyChanged
 		_settingsStore = settingsStore;
 		SoundVolume = settingsStore.Settings.Volume;
 		SoundMute = settingsStore.Settings.Mute;
-		WifiSSID = settingsStore.Settings.WifiSsid ?? "";
-		WifiPassword = settingsStore.Settings.WifiPassword ?? "";
+		WiFiSSID = settingsStore.Settings.WiFiSsid ?? "";
+		WiFiPassword = settingsStore.Settings.WiFiPassword ?? "";
 
 		SlackSettings = slackSettings;
 		NotifySettings = notifySettings;
@@ -202,7 +204,7 @@ public class MainViewModel : INotifyPropertyChanged
 			NotifySettingsRequested?.Invoke(this, true);
 		});
 
-		ConnectWiFiCommand = new AsyncRelayCommand(ConnectWiFiAsync);
+		WiFiActionCommand = new AsyncRelayCommand(WiFiActionAsync);
 
 		slackSettings.RequestClose += (sender, ok) =>
 		{
@@ -237,9 +239,11 @@ public class MainViewModel : INotifyPropertyChanged
 			if (_connectSlappyBell.Port == e.Port)
 			{
 				_connectSlappyBell = null;
+				WiFiStatusCode = (int)ReceiveMessage.ResultCode.WiFiDisconnected;
 				OnPropertyChanged(nameof(CurrentComPort));
 				OnPropertyChanged(nameof(IsSlappyBellConnected));
 				OnPropertyChanged(nameof(ConnectSlappyBell));
+				OnPropertyChanged(nameof(WiFiSSID));
 			}
 		};
 		slappyBellController.SlappyDeviceConnected += async (sender, e) =>
@@ -248,18 +252,18 @@ public class MainViewModel : INotifyPropertyChanged
 			var r = await _slappyDevice.WiFiStatus();
 			if (r.Code == ReceiveMessage.ResultCode.Success)
 			{
-				Debug.WriteLine($"WifiStatus: {r.Message}");
+				Debug.WriteLine($"WiFiStatus: {r.Message}");
 			}
 
-			_slappyDevice.OnWifiStatusChanged += (o, i) =>
+			_slappyDevice.OnWiFiStatusChanged += (o, i) =>
 			{
 				switch ((ReceiveMessage.ResultCode)i)
 				{
-					case ReceiveMessage.ResultCode.WifiConnected:
-					case ReceiveMessage.ResultCode.WifiSsidNotFound:
-					case ReceiveMessage.ResultCode.WifiAuthFail:
-					case ReceiveMessage.ResultCode.WifiDisconnected:
-						WifiStatusCode = i;
+					case ReceiveMessage.ResultCode.WiFiConnected:
+					case ReceiveMessage.ResultCode.WiFiSsidNotFound:
+					case ReceiveMessage.ResultCode.WiFiAuthFail:
+					case ReceiveMessage.ResultCode.WiFiDisconnected:
+						WiFiStatusCode = i;
 						break;
 				}
 			};
@@ -299,20 +303,31 @@ public class MainViewModel : INotifyPropertyChanged
 		});
 	}
 
-	private async Task ConnectWiFiAsync()
+	private async Task WiFiActionAsync()
 	{
+		if (_wifiStatusCode == _wifiStatusCode == IsWiFiConnected)
+		{
+			await DisconnectWiFiAsync();
+		}
+		else
+		{
+			await ConnectWiFiAsync();
+		}
+	}
+
+	private async Task ConnectWiFiAsync() {
 		string? error = null;
 		if (_slappyDevice == null)
 		{
 			error = "SlappyBellが接続していません";
 		}
 
-		if (error == null && string.IsNullOrEmpty(WifiSSID))
+		if (error == null && string.IsNullOrEmpty(WiFiSSID))
 		{
 			error = "SSIDを入力してください";
 		}
 
-		if (error == null && string.IsNullOrEmpty(WifiPassword))
+		if (error == null && string.IsNullOrEmpty(WiFiPassword))
 		{
 			error = "パスワードを入力してください";
 		}
@@ -323,15 +338,27 @@ public class MainViewModel : INotifyPropertyChanged
 			return;
 		}
 
-		var r = await _slappyDevice!.ConnectWifi(WifiSSID, SettingsStore.UnprotectString(WifiPassword));
+		var r = await _slappyDevice!.ConnectWiFi(WiFiSSID, SettingsStore.UnprotectString(WiFiPassword));
 		if (r.Code != ReceiveMessage.ResultCode.Success)
 			MessageBox.Show($"Wi-Fi接続に失敗しました。{r.Message}", "Wi-Fi接続エラー");
 	}
+	private async Task DisconnectWiFiAsync()
+	{
+		if (_slappyDevice == null)
+			return;
 
+		var r = await _slappyDevice.DisconnectWiFi();
+		WiFiSSID = "";
+		WiFiPassword = "";
+		WiFiStatusCode = (int)ReceiveMessage.ResultCode.WiFiDisconnected;
+		OnPropertyChanged(nameof(WiFiStatusCode));
+		OnPropertyChanged(nameof(WiFiSSID));
+		OnPropertyChanged(nameof(WiFiPassword));
+	}
 	public void CommitWiFiSettings()
 	{
-		if (_settingsStore.Settings.WifiSsid == WifiSSID &&
-		    _settingsStore.Settings.WifiPassword == WifiPassword)
+		if (_settingsStore.Settings.WiFiSsid == WiFiSSID &&
+		    _settingsStore.Settings.WiFiPassword == WiFiPassword)
 		{
 			return;
 		}
@@ -340,8 +367,8 @@ public class MainViewModel : INotifyPropertyChanged
 		{
 			return s with
 			{
-				WifiSsid = _wifiSsid,
-				WifiPassword = _wifiPassword
+				WiFiSsid = _wifiSsid,
+				WiFiPassword = _wifiPassword
 			};
 		});
 	}

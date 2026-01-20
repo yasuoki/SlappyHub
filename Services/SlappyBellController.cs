@@ -76,8 +76,8 @@ public class SlappyBellController
 				await _slappyDevice.SetVolume(0);
 			else
 				await _slappyDevice.SetVolume(settings.Volume);
-			if(!string.IsNullOrEmpty(settings.WifiSsid) && !string.IsNullOrEmpty(settings.WifiPassword))
-				await _slappyDevice.ConnectWifi(settings.WifiSsid, SettingsStore.UnprotectString(settings.WifiPassword));
+			if(!string.IsNullOrEmpty(settings.WiFiSsid) && !string.IsNullOrEmpty(settings.WiFiPassword))
+				await _slappyDevice.ConnectWiFi(settings.WiFiSsid, SettingsStore.UnprotectString(settings.WiFiPassword));
 
 			_senderFilter.Clear();
 			_textFilter.Clear();

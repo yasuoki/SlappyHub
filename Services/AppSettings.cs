@@ -52,8 +52,8 @@ public record AppSettings
 	public bool EnableDirectMessage { get; init; }
 
 	// Wi-Fi設定（mp3ファイルのダウンロードでのみ利用)
-	public string? WifiSsid { get; init; }
-	public string? WifiPassword { get; init; }
+	public string? WiFiSsid { get; init; }
+	public string? WiFiPassword { get; init; }
 	
 	// 着信音の音量(0%~100%)
 	public int Volume { get; init; } = 100;

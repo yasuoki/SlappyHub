@@ -44,12 +44,12 @@ public class ReceiveMessage
 		TooLongCommand		= 23,
 		StorageFull			= 30,
 		FileIoError			= 31,
-		NoWifiConnection	= 32,
-		WifiConnectFailed	= 33,
-		WifiConnected		= 50,
-		WifiSsidNotFound	= 51,
-		WifiAuthFail	    = 52,
-		WifiDisconnected	= 53,
+		NoWiFiConnection	= 32,
+		WiFiConnectFailed	= 33,
+		WiFiConnected		= 50,
+		WiFiSsidNotFound	= 51,
+		WiFiAuthFail	    = 52,
+		WiFiDisconnected	= 53,
 		Error				= 90,
 	}
 

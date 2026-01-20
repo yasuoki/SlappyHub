@@ -241,7 +241,7 @@
                              Canvas.Left="979.6" Canvas.Top="81.5" Width="106" Height="106"
                              Fill="#80AAAAAA"
                              IsHitTestVisible="False"
-                             Visibility="{Binding IsWifiConnected, Converter={StaticResource InvertBoolToVisibilityConverter}}" />
+                             Visibility="{Binding IsWiFiConnected, Converter={StaticResource InvertBoolToVisibilityConverter}}" />
                     <Ellipse x:Name="wifi_icon"
                              Style="{StaticResource HotspotShapeStyle}"
                              Canvas.Left="979.6" Canvas.Top="81.5" Width="106" Height="106"
@@ -249,7 +249,7 @@
                         <Ellipse.ToolTip>
                             <StackPanel>
                                 <TextBlock Text="Wi-Fi接続" FontWeight="SemiBold" Foreground="White" />
-                                <TextBlock Text="{Binding WifiStatusText}" Foreground="#CCFFFFFF" />
+                                <TextBlock Text="{Binding WiFiStatusText}" Foreground="#CCFFFFFF" />
                             </StackPanel>
                         </Ellipse.ToolTip>
                     </Ellipse>
@@ -276,18 +276,18 @@
                                 <TextBlock Text="Wi-Fi 設定" Foreground="#E6FFFFFF" Margin="0,0,0,8"/>
 
                                 <TextBlock Text="SSID" Foreground="#E6FFFFFF" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding WifiSSID, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                <TextBox Text="{Binding WiFiSSID, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          Margin="0,0,0,8"/>
 
                                 <TextBlock Text="パスワード" Foreground="#E6FFFFFF" Margin="0,0,0,4"/>
                                 <PasswordBox PasswordChanged="WiFiPassword_PasswordChanged"
                                              Margin="0,0,0,8"/>
 
-                                <Button Content="接続"
-                                        Command="{Binding ConnectWiFiCommand}"
+                                <Button Content="{Binding WiFiButtonText}"
+                                        Command="{Binding WiFiActionCommand}"
                                         Margin="0,0,0,10"/>
 
-                                <TextBlock Text="{Binding WifiStatusText}" Foreground="#E6FFFFFF" TextWrapping="Wrap" Margin="0,8,0,8"/>
+                                <TextBlock Text="{Binding WiFiStatusText}" Foreground="#E6FFFFFF" TextWrapping="Wrap" Margin="0,8,0,8"/>
 
                             </StackPanel>
                         </Border>

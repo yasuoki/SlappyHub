@@ -100,7 +100,7 @@ public partial class MainWindow : Window
     {
         if (DataContext is MainViewModel vm && sender is PasswordBox pb)
         {
-            vm.WifiPassword = SettingsStore.ProtectString(pb.Password);
+            vm.WiFiPassword = SettingsStore.ProtectString(pb.Password);
         }
     }
     

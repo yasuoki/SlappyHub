@@ -25,7 +25,7 @@ public class SlappyDevice
     internal UsbDeviceInfo Info { init; get; }
     internal UsbDevicePort Port { init; get; }
     
-    public event EventHandler<int>? OnWifiStatusChanged;
+    public event EventHandler<int>? OnWiFiStatusChanged;
 
 
     private UInt16 crc16(string buff)
@@ -55,11 +55,11 @@ public class SlappyDevice
             Debug.WriteLine($"Notify: {args.Code} {args.Message}");
             switch (args.Code)
             {
-                case ReceiveMessage.ResultCode.WifiConnected:
-                case ReceiveMessage.ResultCode.WifiSsidNotFound:
-                case ReceiveMessage.ResultCode.WifiAuthFail:
-                case ReceiveMessage.ResultCode.WifiDisconnected:
-                    OnWifiStatusChanged?.Invoke(this, (int)args.Code);
+                case ReceiveMessage.ResultCode.WiFiConnected:
+                case ReceiveMessage.ResultCode.WiFiSsidNotFound:
+                case ReceiveMessage.ResultCode.WiFiAuthFail:
+                case ReceiveMessage.ResultCode.WiFiDisconnected:
+                    OnWiFiStatusChanged?.Invoke(this, (int)args.Code);
                     break;
             }
         };
@@ -149,10 +149,15 @@ public class SlappyDevice
     {
         return await SendCommandAsync("wifi");
     }
-    public async Task<ReceiveMessage> ConnectWifi(string ssid, string passwd)
+    public async Task<ReceiveMessage> ConnectWiFi(string ssid, string passwd)
     {
         var cmd = $"wifi \"{ssid}\" \"{passwd}\"";
         return await SendCommandAsync(cmd);
+    }
+    public async Task<ReceiveMessage> DisconnectWiFi()
+    {
+        var cmd = $"wifi off";
+        return await SendCommandAsync(cmd,TimeSpan.FromSeconds(10));
     }
     
     public async Task<ReceiveMessage> LedOn(int slot, string colorPattern)
