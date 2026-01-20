@@ -16,7 +16,6 @@ public class WindowsNotificationConnector
 	private Task? _loopTask;
 	
 	private bool _captureChannelMessage;
-	private bool _captureDirectMessage;
 	private string? _captureWorkspace;
 	
 	private readonly HashSet<uint> _seenIds = new();
@@ -34,14 +33,13 @@ public class WindowsNotificationConnector
 		};
 	}
 
-	public async Task Start(bool captureChannelMessage, bool captureDirectMessage, string? captureWorkspace)
+	public async Task Start(bool captureChannelMessage, string? captureWorkspace)
 	{
 		if(_started)
 			return;
 		_started = true;
 		_cts = new CancellationTokenSource();
 		_captureChannelMessage = captureChannelMessage;
-		_captureDirectMessage = captureDirectMessage;
 		_captureWorkspace = captureWorkspace;
 		
 		if (!ApiInformation.IsTypePresent("Windows.UI.Notifications.Management.UserNotificationListener"))
@@ -192,8 +190,7 @@ public class WindowsNotificationConnector
 		{
 			if (isDirectMessage)
 			{
-				if (_captureDirectMessage)
-					ev = new NotificationEvent("notify", "[DM]", sender, body);
+				ev = new NotificationEvent("notify", "[DM]", sender, body);
 			}
 			else
 			{

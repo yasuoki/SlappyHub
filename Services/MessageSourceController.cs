@@ -28,30 +28,29 @@ public class MessageSourceController
 			_settings = newSettings;
 			if (_started)
 			{
-				if (oldSettings.ChannelSource != newSettings.ChannelSource)
+				var usingSlackConnector = oldSettings.ChannelSource == ChannelSourceMode.Socket;
+				var needSlackConnector = newSettings.ChannelSource == ChannelSourceMode.Socket;
+				var usingWindowsNotification = oldSettings.ChannelSource == ChannelSourceMode.WindowsNotify || oldSettings.EnableDirectMessage;
+				var needWindowsNotificationConnector = newSettings.ChannelSource == ChannelSourceMode.WindowsNotify || newSettings.EnableDirectMessage;
+				
+				if (usingSlackConnector && !needSlackConnector)
 				{
-					if (oldSettings.ChannelSource == ChannelSourceMode.Socket)
-					{
-						_slackConnector.Stop();
-					}
+					_slackConnector.Stop();
+				}
 
-					if (oldSettings.ChannelSource == ChannelSourceMode.WindowsNotify || oldSettings.EnableDirectMessage)
-					{
-						_windowsNotificationConnector.Stop();
-					}
+				if (usingWindowsNotification && !needWindowsNotificationConnector)
+				{
+					_windowsNotificationConnector.Stop();
+				}
 
-					if (newSettings.ChannelSource == ChannelSourceMode.Socket)
-					{
-						await _slackConnector.Start(newSettings.SlackAppToken, newSettings.SlackBotToken);
-					}
-
-					if (newSettings.ChannelSource == ChannelSourceMode.WindowsNotify || newSettings.EnableDirectMessage)
-					{
-						await _windowsNotificationConnector.Start(
-							newSettings.ChannelSource == ChannelSourceMode.WindowsNotify,
-							newSettings.EnableDirectMessage,
-							newSettings.CaptureWorkspace);
-					}
+				if (needSlackConnector && !usingSlackConnector)
+				{
+					await _slackConnector.Start(newSettings.SlackAppToken, newSettings.SlackBotToken);
+				}
+				if(needWindowsNotificationConnector && !usingWindowsNotification) {
+					await _windowsNotificationConnector.Start(
+						newSettings.ChannelSource == ChannelSourceMode.WindowsNotify,
+						newSettings.CaptureWorkspace);
 				}
 			}
 		};
@@ -77,7 +76,6 @@ public class MessageSourceController
 			{
 				await _windowsNotificationConnector.Start(
 					_settings.ChannelSource == ChannelSourceMode.WindowsNotify,
-					_settings.EnableDirectMessage,
 					_settings.CaptureWorkspace);
 			}
 			catch (Exception e)
