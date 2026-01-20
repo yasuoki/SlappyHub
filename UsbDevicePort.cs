@@ -237,23 +237,28 @@ public class UsbDevicePort : IDisposable
 			var port = new SerialPort();
 			try
 			{
+				await Task.Delay(600);
 				port.BaudRate = 115200;
 				port.NewLine = "\n";
 				port.Parity = Parity.None;
-				port.RtsEnable = true;
-				port.DtrEnable = true;
+				port.RtsEnable = false;
+				port.DtrEnable = false;
 				port.DataBits = 8;
 				port.StopBits = StopBits.One;
 				port.Handshake = Handshake.None;
 				port.PortName = _portName;
 				port.Open();
+				port.RtsEnable = true;
+				port.DtrEnable = true;
+				port.DiscardInBuffer();
+				port.DiscardOutBuffer();
+				await Task.Delay(800);
 			}
 			catch (Exception ex)
 			{
 				port.Close();
 				throw;
 			}
-
 			_port = port;
 			_status = "connected";
 			_port.DataReceived += OnDataArrived;

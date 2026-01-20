@@ -71,16 +71,10 @@ public class SlappyDevice
         var version = "";
         try
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(200));
             await port.ConnectAsync();
-            await Task.Delay(TimeSpan.FromMilliseconds(800));
             await port.SendRawAsync("\n");
             var ret = await port.WaitForLineAsync(
-                line =>
-                {
-                    //Debug.WriteLine($"DetectDevice: {line}");
-                    return Regex.IsMatch(line, "Yonabe Factory */ *SlappyBell");
-                },
+                line =>Regex.IsMatch(line, "Yonabe Factory */ *SlappyBell"),
                 TimeSpan.FromSeconds(3));
             var segs = ret.Split('/');
             if (segs.Length == 3)
