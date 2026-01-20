@@ -14,6 +14,8 @@ public class WindowsNotificationConnector
 	private SettingsStore _settingsStore;
 	private CancellationTokenSource? _cts;
 	private Task? _loopTask;
+	private int _pending;
+	private readonly SemaphoreSlim _wake = new(0);
 	
 	private bool _captureChannelMessage;
 	private string? _captureWorkspace;
@@ -76,6 +78,12 @@ public class WindowsNotificationConnector
 		try { cts?.Cancel(); } catch { /* ignore */ }
 		OnConnectionChanged?.Invoke(this, false);
 	}
+	
+	public void Wake()
+	{
+		if (Interlocked.Exchange(ref _pending, 1) == 0)
+			_wake.Release();
+	}
 
 	private async Task PrimeSeenSetAsync(UserNotificationListener listener, CancellationToken ct)
 	{
@@ -99,22 +107,27 @@ public class WindowsNotificationConnector
 	{
 		try
 		{
-			using var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
-
-			while (await timer.WaitForNextTickAsync(ct).ConfigureAwait(false))
+			while (!ct.IsCancellationRequested)
 			{
+				bool signaled = await _wake.WaitAsync(10000, ct).ConfigureAwait(false);
+				if(signaled)
+					await Task.Delay(2000);
+				Interlocked.Exchange(ref _pending, 0);
 				IReadOnlyList<UserNotification> list;
-
 				try
 				{
 					list = await listener.GetNotificationsAsync(NotificationKinds.Toast).AsTask(ct);
 				}
-				catch (OperationCanceledException) { break; }
+				catch (OperationCanceledException)
+				{
+					break;
+				}
 				catch (Exception ex)
 				{
 					Debug.WriteLine($"WindowsNotificationConnector: GetNotificationsAsync failed: {ex}");
 					continue;
 				}
+
 				var currentIds = new HashSet<uint>();
 				foreach (var n in list)
 				{
@@ -133,8 +146,13 @@ public class WindowsNotificationConnector
 						Debug.WriteLine($"WindowsNotificationConnector: Router.Route failed: {ex}");
 					}
 				}
+
 				_seenIds.Clear();
 				_seenIds.UnionWith(currentIds);
+
+				while (_wake.CurrentCount > 0 && _wake.Wait(0))
+				{
+				}
 			}
 		}
 		catch (OperationCanceledException) { }

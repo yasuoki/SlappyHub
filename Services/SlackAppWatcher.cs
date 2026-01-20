@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using SlappyHub.Models;
+using SlappyHub.Services.Notifications;
 
 namespace SlappyHub.Services;
 
@@ -41,11 +42,13 @@ public class SlackAppWatcher
 	private string _workspaceName = "";
 	private string _channel = "";
 	private string _sender = "";
+	private WindowsNotificationConnector _winNotifyConnector;
 
 	public event EventHandler<SlackViewChangeEvent>? OnChangeView;
 
-	public SlackAppWatcher()
+	public SlackAppWatcher(WindowsNotificationConnector winNotifyConnector)
 	{
+		_winNotifyConnector = winNotifyConnector;
 		_proc = WinEventProc;
 		_hook = Win32.SetWinEventHook(
 			EVENT_SYSTEM_FOREGROUND, EVENT_OBJECT_NAMECHANGE,
@@ -67,7 +70,6 @@ public class SlackAppWatcher
 				_sender = info.Sender;
 			}
 		}
-
 		_started = true;
 	}
 
@@ -82,10 +84,10 @@ public class SlackAppWatcher
 		{
 			if (eventType == EVENT_OBJECT_NAMECHANGE)
 			{
+				if (_winNotifyConnector.IsStarted)
+					_winNotifyConnector.Wake();
 				if (Win32.GetForegroundWindow() != hWnd)
-				{
 					return;
-				}
 			}
 			var info = GetSlackViewInfo(hWnd);
 			if (info != null)
