@@ -240,8 +240,8 @@ public class UsbDevicePort : IDisposable
 				port.BaudRate = 115200;
 				port.NewLine = "\n";
 				port.Parity = Parity.None;
-				port.RtsEnable = false;
-				port.DtrEnable = false;
+				port.RtsEnable = true;
+				port.DtrEnable = true;
 				port.DataBits = 8;
 				port.StopBits = StopBits.One;
 				port.Handshake = Handshake.None;
