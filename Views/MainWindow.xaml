@@ -373,7 +373,21 @@
                 </Canvas>
             </Grid>
         </Viewbox>
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Margin="8"
+                    Opacity="0.85">
+            <TextBlock Text="SlappyHub ver" />
+            <TextBlock Text="{x:Static local:AppInfo.Version}" Margin="2,0,10,0"/>
 
+            <TextBlock>
+                <Hyperlink NavigateUri="{x:Static local:AppInfo.RepoUrl}"
+                           RequestNavigate="Repo_RequestNavigate">
+                    Document / Soucr Code(GitHub)
+                </Hyperlink>
+            </TextBlock>
+        </StackPanel>
         <!-- ====== SlackSettingsView Overlay ====== -->
         <Grid x:Name="SlackOverlay"
               Visibility="Collapsed"

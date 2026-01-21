@@ -5,6 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
+using System.Windows.Navigation;
 using SlappyHub.Services;
 using SlappyHub.ViewModels;
 
@@ -163,6 +164,16 @@ public partial class MainWindow : Window
 
     private void NotifyDrawer_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
+        e.Handled = true;
+    }
+    
+    
+    private void Repo_RequestNavigate(object sender, RequestNavigateEventArgs e)
+    {
+        Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri)
+        {
+            UseShellExecute = true
+        });
         e.Handled = true;
     }
 }

@@ -2,7 +2,8 @@
 ## About
 **もう、Slackのメッセージを見落として、対応が遅れたり後で気まずくなることはありません**  
 SlappyHubは、Slackのメッセージが届くとデスクトップガジェット(ハードウェア）SlappyBellと連動し、LEDの発光と音で通知するアプリケーションです。  
-[SlappyBell リポジトリ](https://github.com/yasuoki/SlappyBell)
+[SlappyBell ソースコード リポジトリ](https://github.com/yasuoki/SlappyBell)
+
 
 SlappyHubアプリケーションのUI  
 <img src="img/fig0.png" width="80%"><br>  
@@ -10,6 +11,11 @@ SlappyHubアプリケーションのUI
 SlappyBell  
 <img src="img/fig1.jpg" width="80%"><br>  
 ---------------------
+
+## Who is this for?
+- Slackメッセージの着信を常時気にしていられない人
+- 離席中でも重要な通知を確実に受け取りたい人
+- デスクトップガジェットが好きな人
 
 ## Features
 - **Slackメッセージの通知**  
@@ -25,14 +31,15 @@ LEDの発光は、Slackアプリで通知されたチャンネルを表示する
 もちろん音量の調整や一時的なミュートにも対応しています。
 
 - **Wi-Fi接続**  
-着信音は、SlappyBellにアップロードしておいたmp3ファイルを再生することが基本動作になりますが、
-SlappyBellのWi-Fi接続機能を利用し、http://~.mp3のURLを指定してネット上のmp3ファイルを再生することもできます。
+着信音は、SlappyBell本体にアップロードした mp3 ファイルを再生するのが基本動作です。  
+また、SlappyBellのWi-Fi接続機能を利用して、http://～.mp3 のURLを指定し、ネット上の mp3 ファイルを再生することもできます。  
 
 - **簡単な設定**  
-Windowsの通知をキャプチャして動作するので、設定は簡単です。  
-設定はやや面倒になりますがSlackのボットに登録してソケットインターフェースで動作することもでき、より正確な通知を取得することもできます。  
+Windowsの通知を監視するモードでは、Slack側の設定が不要なため簡単に利用できます。  
+一方、Slackのボットとして接続するモードでは設定はやや手間ですが、より正確な通知が可能です。
 
 ## System Requirements
+- SlappyBell デバイス
 - Windows 11
 - .NET 9.0
 - Windows版 Slack デスクトップアプリケーション（ブラウザ版は非対応）
@@ -60,6 +67,7 @@ users:read
 
 また、通知したいチャンネルにSlappyHubボットを連携される必要があります。Slackアプリのチャンネル詳細から、インテグレーションにSlappyHubのAppを追加してください。
 
+※ この設定は **Slackボット連携モードを使用する場合のみ必要** です。  
 ※ Slackはひとつのワークスペースに同時に接続するソケットモードコネクションを制限しています。多くの人が参加するワークスペースでは接続数の制約にかかる可能性があります。
 
 
