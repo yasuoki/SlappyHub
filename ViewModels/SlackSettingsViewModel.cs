@@ -67,11 +67,6 @@ public sealed class SlackSettingsViewModel : INotifyPropertyChanged
     public string AppToken { get; set; } = "";
     public string BotToken { get; set; } = "";
     
-    // Windows Notify監視設定
-    // ChannelSource = ChannelSourceMode.WindowsNotifyの場合に監視するワークスペースを設定（オプション）
-    public string CaptureWorkspace { get; set; } = "";
-    public string WindowsNotifyAccessStatus { get; private set; } = "ABC";
-    
     // Master Node設定
     // ChannelSource = ChannelSourceMode.MasterNodeの場合にMasterNodeへの接続設定が必要
     public string MasterNodeHost { get; set; } = "";
@@ -117,10 +112,6 @@ public sealed class SlackSettingsViewModel : INotifyPropertyChanged
         AppToken = s.SlackAppToken ?? "";
         BotToken = s.SlackBotToken ?? "";
         
-        // ChannelSource = WindowsNotify設定
-        CaptureWorkspace = s.CaptureWorkspace ?? "";
-        
-        
         // ChannelSource = MasterNode設定
         MasterNodeHost = s.MasterNodeHost ?? "";
         MasterNodePortText = s.MasterNodePort?.ToString() ?? "";
@@ -154,8 +145,6 @@ public sealed class SlackSettingsViewModel : INotifyPropertyChanged
             SlackAppToken = NullIfEmpty(AppToken),
             SlackBotToken = NullIfEmpty(BotToken),
             
-            CaptureWorkspace = NullIfEmpty(CaptureWorkspace),
-
             MasterNodeHost = NullIfEmpty(MasterNodeHost),
             MasterNodePort = masterNodePort,
             MasterNodePassword = NullIfEmpty(MasterNodePassword),
@@ -175,7 +164,6 @@ public sealed class SlackSettingsViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(IsChannelMasterNode));
         OnPropertyChanged(nameof(AppToken));
         OnPropertyChanged(nameof(BotToken));
-        OnPropertyChanged(nameof(CaptureWorkspace));
         OnPropertyChanged(nameof(MasterNodeHost));
         OnPropertyChanged(nameof(MasterNodePortText));
         OnPropertyChanged(nameof(MasterNodePassword));

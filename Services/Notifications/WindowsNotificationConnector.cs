@@ -18,7 +18,6 @@ public class WindowsNotificationConnector
 	private readonly SemaphoreSlim _wake = new(0);
 	
 	private bool _captureChannelMessage;
-	private string? _captureWorkspace;
 	
 	private readonly HashSet<uint> _seenIds = new();
 	
@@ -35,14 +34,13 @@ public class WindowsNotificationConnector
 		};
 	}
 
-	public async Task Start(bool captureChannelMessage, string? captureWorkspace)
+	public async Task Start(bool captureChannelMessage)
 	{
 		if(_started)
 			return;
 		_started = true;
 		_cts = new CancellationTokenSource();
 		_captureChannelMessage = captureChannelMessage;
-		_captureWorkspace = captureWorkspace;
 		
 		if (!ApiInformation.IsTypePresent("Windows.UI.Notifications.Management.UserNotificationListener"))
 		{
@@ -74,7 +72,6 @@ public class WindowsNotificationConnector
 
 		_cts = null;
 		_loopTask = null;
-		_captureWorkspace = null;
 		try { cts?.Cancel(); } catch { /* ignore */ }
 		OnConnectionChanged?.Invoke(this, false);
 	}

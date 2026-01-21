@@ -32,10 +32,6 @@ public record AppSettings
 	public string? SlackAppToken { get; init; }
 	public string? SlackBotToken { get; init; }
 
-	// Windows Notify監視設定
-	// ChannelSource = ChannelSourceMode.WindowsNotifyの場合に監視するワークスペースを設定（オプション）
-	public string? CaptureWorkspace { get; init; }
-
 	// Master Node設定
 	// ChannelSource = ChannelSourceMode.MasterNodeの場合にMasterNodeへの接続設定が必要
 	public string? MasterNodeHost { get; init; }

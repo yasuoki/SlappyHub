@@ -282,9 +282,6 @@
 
             <!-- SenderFilter tags -->
             <TextBlock Text="通知しない送信者" FontWeight="SemiBold" Margin="0 16 0 0" />
-            <TextBlock Text="Enterでタグ追加。カンマは文字として扱います（末尾のカンマだけ自動除去）。"
-                       Opacity="0.7" TextWrapping="Wrap" Margin="0,2,0,6" />
-
             <Border BorderBrush="#FFE0E0E0"
                     BorderThickness="1"
                     CornerRadius="10"
@@ -339,9 +336,6 @@
 
             <!-- TextFilter tags -->
             <TextBlock Text="通知しない本文" FontWeight="SemiBold" Margin="0,16,0,0" />
-            <TextBlock Text="Enterでタグ追加。本文に含まれたら通知しません。"
-                       Opacity="0.7" TextWrapping="Wrap" Margin="0,2,0,6" />
-
             <Border BorderBrush="#FFE0E0E0"
                     BorderThickness="1"
                     CornerRadius="10"

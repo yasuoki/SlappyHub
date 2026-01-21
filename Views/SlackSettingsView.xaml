@@ -134,30 +134,32 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="8"/>
                         <RowDefinition Height="Auto"/>
+                        <!--
                         <RowDefinition Height="12"/>
                         <RowDefinition Height="Auto"/>
+                        -->
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="160"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-
+                    <!--
                     <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
                                Text="対象ワークスペース"/>
                     <TextBox Grid.Row="0" Grid.Column="1"
                              Text="{Binding CaptureWorkspace, UpdateSourceTrigger=PropertyChanged}"
                              ToolTip="複数WSを使っている場合の判別用。未指定でもOK"/>
-
-                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="通知アクセス"/>
-                    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    -->
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="通知アクセス"/>
+                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Content="許可を要求" Command="{Binding RequestWindowsNotifyAccessCommand}"/>
                         <!--
                         <TextBlock Text="{Binding WindowsNotifyAccessStatus}" Margin="12,0,0,0"/>
                         -->
                     </StackPanel>
 
-                    <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Opacity="0.7" TextWrapping="Wrap">
-                        Slack が Windows通知を出したものだけ拾えます。Slack側の通知設定に依存します。
+                    <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Opacity="0.7" TextWrapping="Wrap">
+                        Slackの通知設定に依存し、SlackがWindows通知を出したものだけに反応します。またWindowsの通知設定をONにしてください。
                     </TextBlock>
                 </Grid>
             </GroupBox>

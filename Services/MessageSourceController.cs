@@ -49,8 +49,7 @@ public class MessageSourceController
 				}
 				if(needWindowsNotificationConnector && !usingWindowsNotification) {
 					await _windowsNotificationConnector.Start(
-						newSettings.ChannelSource == ChannelSourceMode.WindowsNotify,
-						newSettings.CaptureWorkspace);
+						newSettings.ChannelSource == ChannelSourceMode.WindowsNotify);
 				}
 			}
 		};
@@ -75,8 +74,7 @@ public class MessageSourceController
 			try
 			{
 				await _windowsNotificationConnector.Start(
-					_settings.ChannelSource == ChannelSourceMode.WindowsNotify,
-					_settings.CaptureWorkspace);
+					_settings.ChannelSource == ChannelSourceMode.WindowsNotify);
 			}
 			catch (Exception e)
 			{
