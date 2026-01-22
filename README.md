@@ -12,6 +12,9 @@ SlappyBell
 <img src="img/fig1.jpg" width="80%"><br>  
 ---------------------
 
+***Youtube***   
+[<img src="https://img.youtube.com/vi/7GKKwvN1aGI/hqdefault.jpg" width="80%"/>](https://www.youtube.com/embed/7GKKwvN1aGI)
+
 ## Who is this for?
 - Slackメッセージの着信を常時気にしていられない人
 - 離席中でも重要な通知を確実に受け取りたい人
