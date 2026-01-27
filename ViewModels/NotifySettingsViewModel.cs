@@ -12,6 +12,11 @@ using SlappyHub.Services;
 using LinearGradientBrush = System.Windows.Media.LinearGradientBrush;
 using System.Windows;
 using Microsoft.Win32;
+using Application = System.Windows.Application;
+using Color = System.Windows.Media.Color;
+using MessageBox = System.Windows.MessageBox;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using Point = System.Windows.Point;
 
 namespace SlappyHub.ViewModels;
 

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,6 +9,8 @@ using System.Windows.Media.Animation;
 using System.Windows.Navigation;
 using SlappyHub.Services;
 using SlappyHub.ViewModels;
+using Application = System.Windows.Application;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 
 namespace SlappyHub.Views;
 
@@ -70,6 +73,15 @@ public partial class MainWindow : Window
         var sb = (Storyboard)Resources["HideSlackDrawer"];
         sb.Completed += (_, __) => SlackOverlay.Visibility = Visibility.Collapsed;
         sb.Begin();
+    }
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        base.OnClosing(e);
+        if (!Application.Current.ShutdownMode.Equals(ShutdownMode.OnExplicitShutdown))
+        {
+            e.Cancel = true;
+            Hide();
+        }
     }
 
     private void VolumeIcon_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)

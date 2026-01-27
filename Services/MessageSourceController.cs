@@ -3,6 +3,8 @@ using System.Windows;
 using System.Windows.Threading;
 using SlappyHub.Services.Notifications;
 using SlappyHub.Services.Slack;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 namespace SlappyHub.Services;
 

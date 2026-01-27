@@ -1,6 +1,8 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using SlappyHub.ViewModels;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace SlappyHub.Views;
 

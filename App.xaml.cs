@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.IO;
 using System.Windows;
 using SlappyHub.WebServer;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +9,7 @@ using SlappyHub.Services.Notifications;
 using SlappyHub.Services.Slack;
 using SlappyHub.ViewModels;
 using SlappyHub.Views;
+using Application = System.Windows.Application;
 
 namespace SlappyHub;
 
@@ -17,6 +19,8 @@ namespace SlappyHub;
 public partial class App : Application
 {
     public IServiceProvider Services { get; private set; } = default!;
+    public MainWindow? _mainWindow { get; private set; } = null;
+    private NotifyIcon? _notifyIcon;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -38,12 +42,78 @@ public partial class App : Application
         
         Services = sc.BuildServiceProvider();
         Services.GetRequiredService<SettingsStore>().Load();
-        Services.GetRequiredService<MainWindow>().Show();
+        _mainWindow = Services.GetRequiredService<MainWindow>();//.Show();
         Services.GetRequiredService<SlackAppWatcher>().Start();
         Services.GetRequiredService<NotificationRouter>().Start();
         Services.GetRequiredService<MessageSourceController>().Start();
         Services.GetRequiredService<SlappyBellController>().Start();
         Services.GetRequiredService<UsbWatcher>().Start();
+        
+        InitializeTrayIcon();
+    }
+    
+    private void InitializeTrayIcon()
+    {
+        var uri = new Uri("pack://application:,,,/Assets/profile.ico");
+        using Stream iconStream = Application.GetResourceStream(uri)!.Stream;
+        
+        _notifyIcon = new NotifyIcon
+        {
+            Icon =new System.Drawing.Icon(iconStream),
+            Text = "SlappyHub",
+            Visible = true,
+            ContextMenuStrip = CreateContextMenu()
+        };
+
+        _notifyIcon.MouseClick += (s, e) =>
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                ToggleMainWindow();
+            }
+        };
+    }
+    private ContextMenuStrip CreateContextMenu()
+    {
+        var menu = new ContextMenuStrip();
+
+        menu.Items.Add("表示", null, (_, _) => ShowMainWindow());
+        menu.Items.Add("終了", null, (_, _) => ExitApplication());
+
+        return menu;
+    }
+    private void ToggleMainWindow()
+    {
+        if (_mainWindow == null) return;
+
+        if (_mainWindow.IsVisible)
+        {
+            _mainWindow.Hide();
+        }
+        else
+        {
+            ShowMainWindow();
+        }
+    }
+
+    private void ShowMainWindow()
+    {
+        if (_mainWindow == null) return;
+
+        if (!_mainWindow.IsVisible)
+        {
+            _mainWindow.Show();
+        }
+
+        _mainWindow.WindowState = WindowState.Normal;
+        _mainWindow.Activate();
+    }
+
+    private void ExitApplication()
+    {
+        _notifyIcon!.Visible = false;
+        _notifyIcon.Dispose();
+        Shutdown();
     }
     public App()
     {
