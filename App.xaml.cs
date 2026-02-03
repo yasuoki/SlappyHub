@@ -28,6 +28,7 @@ public partial class App : Application
         var sc = new ServiceCollection();
         sc.AddSingleton<UsbWatcher>();
         sc.AddSingleton<SettingsStore>();
+        sc.AddSingleton<NotifyExtension>();
         sc.AddSingleton<SlackConnector>();
         sc.AddSingleton<WindowsNotificationConnector>();
         sc.AddSingleton<MessageSourceController>();
@@ -43,6 +44,7 @@ public partial class App : Application
         Services = sc.BuildServiceProvider();
         Services.GetRequiredService<SettingsStore>().Load();
         _mainWindow = Services.GetRequiredService<MainWindow>();//.Show();
+        Services.GetRequiredService<NotifyExtension>().Start();
         Services.GetRequiredService<SlackAppWatcher>().Start();
         Services.GetRequiredService<NotificationRouter>().Start();
         Services.GetRequiredService<MessageSourceController>().Start();

@@ -14,7 +14,7 @@ public sealed class NotificationRouter
 	private bool _watchDirectMessages = false;
 	private List<string> _watchChannels = new List<string>();
 	public event EventHandler<NotificationEvent>? OnMessage;
-	public event EventHandler<SlackViewChangeEvent>? OnChangeView;
+	public event EventHandler<ViewChangeEvent>? OnChangeView;
 	public event EventHandler<SourceChangeEvent>? OnNotifySourceChange;
 
 	public NotificationRouter(SettingsStore settingsStore, SlackAppWatcher slackAppWatcher, SlackConnector slackConnector, WindowsNotificationConnector windowsNotificationSource)
@@ -76,7 +76,7 @@ public sealed class NotificationRouter
 		OnNotifySourceChange?.Invoke(this, new SourceChangeEvent(ChannelSourceMode.WindowsNotify, connected));
 	}
 
-	private void RouteView(SlackViewChangeEvent e)
+	private void RouteView(ViewChangeEvent e)
 	{
 		OnChangeView?.Invoke(this, e);
 	}

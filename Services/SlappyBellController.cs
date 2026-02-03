@@ -54,10 +54,7 @@ public class SlappyBellController
 		{
 			if(!_isStarted || _slappyDevice == null)
 				return;
-			if (e.IsForeground)
-			{
-				await OnSlackViewChange(e);
-			}
+			await OnSlackViewChange(e);
 		};
 	}
 	
@@ -103,7 +100,6 @@ public class SlappyBellController
 	
 	private async Task OnDirectMessage(NotificationEvent e)
 	{
-		var info = _slackAppWatcher.GetSlackViewInfo();
 		var n = _settings.NotifySettings;
 		for(int i = 0; i < n.Length; i++)
 		{
@@ -124,7 +120,7 @@ public class SlappyBellController
 					await _slappyDevice.LedOn(i, slot.LedPattern);
 				}
 
-				if (info == null)
+				if (!_slackAppWatcher.IsSourceAppForeground(e.Source))
 				{
 					if (!string.IsNullOrEmpty(slot.Sound))
 					{
@@ -137,7 +133,6 @@ public class SlappyBellController
 
 	private async Task OnChannelMessage(NotificationEvent e)
 	{
-		var info = _slackAppWatcher.GetSlackViewInfo();
 		var n = _settings.NotifySettings;
 		for(int i = 0; i < n.Length; i++)
 		{
@@ -158,7 +153,7 @@ public class SlappyBellController
 					await _slappyDevice.LedOn(i, slot.LedPattern);
 				}
 
-				if (info == null)
+				if (!_slackAppWatcher.IsSourceAppForeground(e.Source))
 				{
 					if (!string.IsNullOrEmpty(slot.Sound))
 					{
@@ -169,18 +164,15 @@ public class SlappyBellController
 		}
 	}
 
-	private async Task OnSlackViewChange(SlackViewChangeEvent e)
+	private async Task OnSlackViewChange(ViewChangeEvent e)
 	{
-		if (e.IsForeground)
+		var n = _settings.NotifySettings;
+		for(int i = 0; i < n.Length; i++)
 		{
-			var n = _settings.NotifySettings;
-			for(int i = 0; i < n.Length; i++)
+			var slot = n[i];
+			if (e.Channel.Equals(slot.Channel, StringComparison.OrdinalIgnoreCase))
 			{
-				var slot = n[i];
-				if (e.Channel.Equals(slot.Channel, StringComparison.OrdinalIgnoreCase))
-				{
-					await _slappyDevice.LedOff(i);
-				}
+				await _slappyDevice.LedOff(i);
 			}
 		}
 	}

@@ -43,12 +43,14 @@ public class SlackAppWatcher
 	private string _channel = "";
 	private string _sender = "";
 	private WindowsNotificationConnector _winNotifyConnector;
+	private NotifyExtension _notifyExtension;
 
-	public event EventHandler<SlackViewChangeEvent>? OnChangeView;
+	public event EventHandler<ViewChangeEvent>? OnChangeView;
 
-	public SlackAppWatcher(WindowsNotificationConnector winNotifyConnector)
+	public SlackAppWatcher(WindowsNotificationConnector winNotifyConnector, NotifyExtension notifyExtension)
 	{
 		_winNotifyConnector = winNotifyConnector;
+		_notifyExtension = notifyExtension;
 		_proc = WinEventProc;
 		_hook = Win32.SetWinEventHook(
 			EVENT_SYSTEM_FOREGROUND, EVENT_OBJECT_NAMECHANGE,
@@ -77,30 +79,69 @@ public class SlackAppWatcher
 		IntPtr hWnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
 	{
 		if (!_started) return;
+		
 		if (eventType != EVENT_SYSTEM_FOREGROUND && eventType != EVENT_OBJECT_NAMECHANGE) return;
 		if (hWnd == IntPtr.Zero) return;
 		var processName = GetProcessNameFromHWnd(hWnd);
-		if (processName != null && string.Equals(processName, "slack", StringComparison.OrdinalIgnoreCase))
+		if(processName == null)
+			return;
+		var title = GetWindowTitle(hWnd);
+		
+		ViewChangeEvent? ev = null;
+		if (eventType == EVENT_SYSTEM_FOREGROUND)
 		{
-			if (eventType == EVENT_OBJECT_NAMECHANGE)
+			ev = _notifyExtension.OnForeground(processName, title);
+			if (ev == null)
+			{
+				if (string.Equals(processName, "slack", StringComparison.OrdinalIgnoreCase))
+				{
+					var info = GetSlackViewInfo(hWnd, title);
+					if (info != null)
+					{
+						_workspaceName = info.WorkspaceName;
+						_channel = info.Channel;
+						_sender = info.Sender;
+						ev = new ViewChangeEvent("slack", info.Channel, info.Sender); 
+					}
+				}
+			}
+		}
+		else
+		{
+			if (Win32.GetForegroundWindow() != hWnd)
+				return;
+			ev = _notifyExtension.OnTitleChange(processName,title);
+			if (ev != null)
 			{
 				if (_winNotifyConnector.IsStarted)
 					_winNotifyConnector.Wake();
-				if (Win32.GetForegroundWindow() != hWnd)
-					return;
 			}
-			var info = GetSlackViewInfo(hWnd);
-			if (info != null)
+			else
 			{
-				if (eventType == EVENT_SYSTEM_FOREGROUND || (_workspaceName != info.WorkspaceName || _channel != info.Channel || _sender != info.Sender))
+				if (string.Equals(processName, "slack", StringComparison.OrdinalIgnoreCase))
 				{
-					_workspaceName = info.WorkspaceName;
-					_channel = info.Channel;
-					_sender = info.Sender;
-					OnChangeView?.Invoke(this,
-						new SlackViewChangeEvent(true, info.WorkspaceName, info.Channel, info.Sender));
+					if (_winNotifyConnector.IsStarted)
+						_winNotifyConnector.Wake();
+					var info = GetSlackViewInfo(hWnd, title);
+					if (info != null)
+					{
+						if (_workspaceName != info.WorkspaceName ||
+							_channel != info.Channel ||
+						    _sender != info.Sender)
+						{
+							_workspaceName = info.WorkspaceName;
+							_channel = info.Channel;
+							_sender = info.Sender;
+							ev = new ViewChangeEvent("slack", info.Channel, info.Sender); 
+						}
+					}
 				}
 			}
+		}
+
+		if (ev != null)
+		{
+			OnChangeView?.Invoke(this, ev);
 		}
 	}
 
@@ -140,13 +181,14 @@ public class SlackAppWatcher
 		}
 	}
 
-	private SlackViewInfo? GetSlackViewInfo(IntPtr hWnd)
+	private SlackViewInfo? GetSlackViewInfo(IntPtr hWnd, string? title = null)
 	{
 		var workspaceName = "";
 		var channelName = "";
 		var sender = "";
 
-		var title = GetWindowTitle(hWnd);
+		if(title == null)
+			title = GetWindowTitle(hWnd);
 
 		// 例: "general - MyWorkspace - Slack"
 		if (!title.EndsWith(" - Slack", StringComparison.OrdinalIgnoreCase))
@@ -180,11 +222,16 @@ public class SlackAppWatcher
 		return new SlackViewInfo(workspaceName, channelName, sender);
 	}
 
-	public SlackViewInfo? GetSlackViewInfo()
+	public bool IsSourceAppForeground(string app)
 	{
-		var hWnd = GetForegroundSlackWindow();
-		if (hWnd == IntPtr.Zero)
-			return null;
-		return GetSlackViewInfo(hWnd);
+		var hwnd = Win32.GetForegroundWindow();
+		if (hwnd == IntPtr.Zero)
+			return false;
+
+		var process = GetProcessNameFromHWnd(hwnd);
+		if (process == null)
+			return false;
+		
+		return process.Contains(app, StringComparison.OrdinalIgnoreCase);
 	}
 }

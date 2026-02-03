@@ -1,20 +1,17 @@
 namespace SlappyHub.Models;
 
-public class SlackViewChangeEvent
+public class ViewChangeEvent
 {
-	private bool _isForeground;
-	private string _workspaceName;
+	private string _source;
 	private string _channel;
 	private string _sender;
 	
-	public bool IsForeground => _isForeground;
-	public string WorkspaceName => _workspaceName;
+	public string Source => _source;
 	public string Channel => _channel;
 	public string Sender => _sender;
-	public SlackViewChangeEvent(bool isForeground, string workspaceName,  string channel, string sender)
+	public ViewChangeEvent(string source,  string channel, string sender)
 	{
-		_workspaceName = workspaceName;
-		_isForeground = isForeground;
+		_source = source;
 		_channel = channel;
 		_sender = sender;
 	}

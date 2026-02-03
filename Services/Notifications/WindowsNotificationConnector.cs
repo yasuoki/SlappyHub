@@ -20,11 +20,11 @@ public class WindowsNotificationConnector
 	private bool _captureChannelMessage;
 	
 	private readonly HashSet<uint> _seenIds = new();
-	
+	private NotifyExtension? _notifyExtension;
 	public event EventHandler<NotificationEvent>? OnMessage;
 	public event EventHandler<bool>? OnConnectionChanged;
 	public bool IsStarted  => _started;
-	public WindowsNotificationConnector(SettingsStore settingsStore)
+	public WindowsNotificationConnector(SettingsStore settingsStore, NotifyExtension notifyExtension)
 	{
 		_started = false;
 		_settingsStore = settingsStore;
@@ -32,6 +32,7 @@ public class WindowsNotificationConnector
 		{
 			Debug.WriteLine("WindowsNotificationConnector: Settings changed");
 		};
+		_notifyExtension = notifyExtension;
 	}
 
 	public async Task Start(bool captureChannelMessage)
@@ -168,8 +169,8 @@ public class WindowsNotificationConnector
 		}
 		catch { /* ignore */ }
 
-		string? title = null;
-		string? body = null;
+		string title = "";
+		string body = "";
 
 		try
 		{
@@ -177,7 +178,7 @@ public class WindowsNotificationConnector
 			if (toastBinding != null)
 			{
 				IReadOnlyList<AdaptiveNotificationText> textElements = toastBinding.GetTextElements();
-				title = textElements.FirstOrDefault()?.Text;
+				title = textElements.FirstOrDefault()?.Text ?? "";
 				body = string.Join("\n", textElements.Skip(1).Select(t => t.Text));
 			}
 		}
@@ -185,39 +186,39 @@ public class WindowsNotificationConnector
 		{
 			// ignore parse errors
 		}
-		
-		bool isDirectMessage =
-			title.Length > 0 &&
-			!title.StartsWith("#"); // チャンネル名は #xxx
-
-		string sender;
-		if (isDirectMessage)
-			sender = title;
-		else
+		NotificationEvent? ev = _notifyExtension?.OnNotify(appName, title, body);
+		if (ev == null)
 		{
-			var seg = body.Split(":");
-			sender = seg[0].Trim();
-			body = string.Join("", seg.Skip(1));
-		}
-
-		NotificationEvent? ev = null;
-		if (appName.Contains("slack", StringComparison.OrdinalIgnoreCase))
-		{
-			if (isDirectMessage)
+			if (appName.Contains("slack", StringComparison.OrdinalIgnoreCase))
 			{
-				ev = new NotificationEvent("notify", "[DM]", sender, body);
-			}
-			else
-			{
-				if (_captureChannelMessage)
+				string sender = "";
+				var isDirectMessage =
+					title.Length > 0 &&
+					!title.StartsWith("#"); // チャンネル名は #xxx
+				if (isDirectMessage)
+					sender = title;
+				else
 				{
-					if(title.StartsWith("#"))
-						title = title.Substring(1).Trim();
-					ev = new NotificationEvent("notify", title, sender, body);
+					var seg = body.Split(":");
+					sender = seg[0].Trim();
+					body = string.Join("", seg.Skip(1));
+				}
+
+				if (isDirectMessage)
+				{
+					ev = new NotificationEvent("notify", "[DM]", sender, body);
+				}
+				else
+				{
+					if (_captureChannelMessage)
+					{
+						if (title.StartsWith("#"))
+							title = title.Substring(1).Trim();
+						ev = new NotificationEvent("notify", title, sender, body);
+					}
 				}
 			}
 		}
 		return ev;
 	}
-
 }
