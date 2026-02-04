@@ -131,23 +131,22 @@ public class WindowsNotificationConnector
 				{
 					currentIds.Add(n.Id);
 					if (_seenIds.Contains(n.Id))
-						continue; // 既知
+						continue;
 					var evt = TryBuildEvent(n);
-					if (evt is null) continue;
-
-					try
+					if (evt != null)
 					{
-						OnMessage?.Invoke(this, evt);
-					}
-					catch (Exception ex)
-					{
-						Debug.WriteLine($"WindowsNotificationConnector: Router.Route failed: {ex}");
+						try
+						{
+							OnMessage?.Invoke(this, evt);
+						}
+						catch (Exception ex)
+						{
+							Debug.WriteLine($"WindowsNotificationConnector: Router.Route failed: {ex}");
+						}
 					}
 				}
-
 				_seenIds.Clear();
 				_seenIds.UnionWith(currentIds);
-
 				while (_wake.CurrentCount > 0 && _wake.Wait(0))
 				{
 				}

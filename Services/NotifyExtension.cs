@@ -36,6 +36,18 @@ public class NotifyExtension
 {
     static readonly string EXTENSION_FILE_NAME = "slappy_extension.js";
     private V8ScriptEngine? _engine;
+
+    private void LogError(Exception e)
+    {
+        if (e.InnerException is ScriptEngineException se )
+        {
+            Log.print(se.ErrorDetails);
+        }
+        else
+        {
+            Log.print(e.Message);
+        }
+    }
     public void Start()
     {
         string exePath = Application.ExecutablePath;
@@ -70,15 +82,7 @@ public class NotifyExtension
         }
         catch (Exception e)
         {
-            var se = e.InnerException as ScriptEngineException;
-            if (se != null )
-            {
-                Log.print(se.ErrorDetails);
-            }
-            else
-            {
-                Log.print(e.Message);
-            }
+            LogError(e);
         }
     }
 
@@ -93,15 +97,7 @@ public class NotifyExtension
             }
             catch (Exception e)
             {
-                var se = e.InnerException as ScriptEngineException;
-                if (se != null )
-                {
-                    Log.print(se.ErrorDetails);
-                }
-                else
-                {
-                    Log.print(e.Message);
-                }
+                LogError(e);
             }
         }
         return null;
@@ -118,15 +114,7 @@ public class NotifyExtension
             }
             catch (Exception e)
             {
-                var se = e.InnerException as ScriptEngineException;
-                if (se != null )
-                {
-                    Log.print(se.ErrorDetails);
-                }
-                else
-                {
-                    Log.print(e.Message);
-                }
+                LogError(e);
             }
         }
         return null;
@@ -143,15 +131,7 @@ public class NotifyExtension
             }
             catch (Exception e)
             {
-                var se = e.InnerException as ScriptEngineException;
-                if (se != null )
-                {
-                    Log.print(se.ErrorDetails);
-                }
-                else
-                {
-                    Log.print(e.Message);
-                }
+                LogError(e);
             }
         }
         return null;

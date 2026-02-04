@@ -108,31 +108,27 @@ public class SlackAppWatcher
 		}
 		else
 		{
-			if (Win32.GetForegroundWindow() != hWnd)
-				return;
-			ev = _notifyExtension.OnTitleChange(processName,title);
-			if (ev != null)
+			if (_winNotifyConnector.IsStarted)
+				_winNotifyConnector.Wake();
+			if (Win32.GetForegroundWindow() == hWnd)
 			{
-				if (_winNotifyConnector.IsStarted)
-					_winNotifyConnector.Wake();
-			}
-			else
-			{
-				if (string.Equals(processName, "slack", StringComparison.OrdinalIgnoreCase))
+				ev = _notifyExtension.OnTitleChange(processName,title);
+				if (ev == null)
 				{
-					if (_winNotifyConnector.IsStarted)
-						_winNotifyConnector.Wake();
-					var info = GetSlackViewInfo(hWnd, title);
-					if (info != null)
+					if (string.Equals(processName, "slack", StringComparison.OrdinalIgnoreCase))
 					{
-						if (_workspaceName != info.WorkspaceName ||
-							_channel != info.Channel ||
-						    _sender != info.Sender)
+						var info = GetSlackViewInfo(hWnd, title);
+						if (info != null)
 						{
-							_workspaceName = info.WorkspaceName;
-							_channel = info.Channel;
-							_sender = info.Sender;
-							ev = new ViewChangeEvent("slack", info.Channel, info.Sender); 
+							if (_workspaceName != info.WorkspaceName ||
+							    _channel != info.Channel ||
+							    _sender != info.Sender)
+							{
+								_workspaceName = info.WorkspaceName;
+								_channel = info.Channel;
+								_sender = info.Sender;
+								ev = new ViewChangeEvent("slack", info.Channel, info.Sender);
+							}
 						}
 					}
 				}
