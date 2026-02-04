@@ -55,6 +55,7 @@ public sealed class NotificationRouter
 
 	private void RouteNotify(NotificationEvent e)
 	{
+		/*
 		if (e.Channel.Equals("[DM]", StringComparison.OrdinalIgnoreCase) && _watchDirectMessages)
 		{
 			OnMessage?.Invoke(this, e);
@@ -64,6 +65,9 @@ public sealed class NotificationRouter
 			if (_watchChannels.Contains(e.Channel) )
 				OnMessage?.Invoke(this, e);
 		}
+		*/
+		if (_watchChannels.Contains(e.Channel) )
+			OnMessage?.Invoke(this, e);
 	}
 
 	private void RouteSlackConenctionChanged(bool connected)
