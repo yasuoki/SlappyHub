@@ -115,16 +115,23 @@ public class SlappyBellController
 					if (e.Text.Contains(filter))
 						return;
 				}
-				if (!string.IsNullOrEmpty(slot.LedPattern))
+
+				var ledPattern = e.LedPattern;
+				if (string.IsNullOrEmpty(ledPattern))
+					ledPattern = slot.LedPattern;
+				if (!string.IsNullOrEmpty(ledPattern))
 				{
-					await _slappyDevice.LedOn(i, slot.LedPattern);
+					await _slappyDevice.LedOn(i, ledPattern);
 				}
 
 				if (!_slackAppWatcher.IsSourceAppForeground(e.Source))
 				{
-					if (!string.IsNullOrEmpty(slot.Sound))
+					var sound = e.Sound;
+					if(string.IsNullOrEmpty(sound))
+						sound = slot.Sound;
+					if (!string.IsNullOrEmpty(sound))
 					{
-						await _slappyDevice.Play(slot.Sound);
+						await _slappyDevice.Play(sound);
 					}
 				}
 			}

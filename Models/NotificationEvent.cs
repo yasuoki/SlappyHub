@@ -11,6 +11,9 @@ public class NotificationEvent
 	public string Channel => _channel;
 	public string Sender => _sender;
 	public string Text => _text;
+	public string? LedPattern { get; set; }
+	public string? Sound { get; set; }
+	
 	public NotificationEvent(string source, string channel, string sender, string text)
 	{
 		_source = source;
