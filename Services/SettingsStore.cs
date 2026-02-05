@@ -53,6 +53,7 @@ public class SettingsStore
 		while (true)
 		{
 			var oldValue = Volatile.Read(ref _settings);
+			if (oldValue == null) continue;
 			var newValue = update(oldValue);
 			var exchanged = Interlocked.CompareExchange(ref _settings, newValue, oldValue);
 			if (ReferenceEquals(exchanged, oldValue))

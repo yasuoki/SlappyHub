@@ -55,33 +55,25 @@ public sealed class NotificationRouter
 
 	private void RouteNotify(NotificationEvent e)
 	{
-		/*
-		if (e.Channel.Equals("[DM]", StringComparison.OrdinalIgnoreCase) && _watchDirectMessages)
-		{
-			OnMessage?.Invoke(this, e);
-		}
-		else
-		{
-			if (_watchChannels.Contains(e.Channel) )
-				OnMessage?.Invoke(this, e);
-		}
-		*/
-		if (_watchChannels.Contains(e.Channel) )
+		if (_started && _watchChannels.Contains(e.Channel) )
 			OnMessage?.Invoke(this, e);
 	}
 
 	private void RouteSlackConenctionChanged(bool connected)
 	{
-		OnNotifySourceChange?.Invoke(this, new SourceChangeEvent(ChannelSourceMode.Socket, connected));
+		if(_started)
+			OnNotifySourceChange?.Invoke(this, new SourceChangeEvent(ChannelSourceMode.Socket, connected));
 	}
 
 	private void RouteWindowNotificationConnectionChanged(bool connected)
 	{
-		OnNotifySourceChange?.Invoke(this, new SourceChangeEvent(ChannelSourceMode.WindowsNotify, connected));
+		if(_started)
+			OnNotifySourceChange?.Invoke(this, new SourceChangeEvent(ChannelSourceMode.WindowsNotify, connected));
 	}
 
 	private void RouteView(ViewChangeEvent e)
 	{
-		OnChangeView?.Invoke(this, e);
+		if(_started)
+			OnChangeView?.Invoke(this, e);
 	}
 }

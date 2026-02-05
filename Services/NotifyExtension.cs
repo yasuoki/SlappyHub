@@ -10,7 +10,7 @@ namespace SlappyHub.Services;
 public class Log
 {
     private static readonly string LOG_FILE_NAME = "slappy_hub.log";
-    private static string _logFile;
+    private static string _logFile = LOG_FILE_NAME;
     private static TextWriter? _writer;
 
     public static void Close()

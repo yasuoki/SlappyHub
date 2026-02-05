@@ -47,7 +47,8 @@ public class MessageSourceController
 
 				if (needSlackConnector && !usingSlackConnector)
 				{
-					await _slackConnector.Start(newSettings.SlackAppToken, newSettings.SlackBotToken);
+					if(newSettings.SlackAppToken != null && newSettings.SlackBotToken != null)
+						await _slackConnector.Start(newSettings.SlackAppToken, newSettings.SlackBotToken);
 				}
 				if(needWindowsNotificationConnector && !usingWindowsNotification) {
 					await _windowsNotificationConnector.Start(
@@ -64,7 +65,12 @@ public class MessageSourceController
 		{
 			try
 			{
-				await _slackConnector.Start(_settings.SlackAppToken, _settings.SlackBotToken);
+				if(_settings.SlackAppToken == null)
+					error = "Slack App Tokenが設定されていません。";
+				else if(_settings.SlackBotToken == null)
+					error = "Slack Bot Tokenが設定されていません。";
+				else
+					await _slackConnector.Start(_settings.SlackAppToken, _settings.SlackBotToken);
 			}
 			catch (Exception e)
 			{

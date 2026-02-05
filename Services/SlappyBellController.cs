@@ -12,7 +12,7 @@ public class SlappyBellController
 	private List<List<string>> _senderFilter = new ();
 	private List<List<string>> _textFilter = new();
 	public event EventHandler<SlappyDevice>? SlappyDeviceConnected; 
-	public event EventHandler SlappyDeviceDisconnected; 
+	public event EventHandler? SlappyDeviceDisconnected; 
 
 	public SlappyBellController(SettingsStore settingsStore, SlackAppWatcher slackAppWatcher, NotificationRouter router, UsbWatcher usbWatcher)
 	{
@@ -55,10 +55,10 @@ public class SlappyBellController
 		};
 	}
 	
-	public void Start()
+	public async Task Start()
 	{
 		_isStarted = true;
-		ApllySettings(_settings);
+		await ApllySettings(_settings);
 	}
 
 	private async Task ApllySettings(AppSettings settings)
@@ -117,7 +117,8 @@ public class SlappyBellController
 					ledPattern = slot.LedPattern;
 				if (!string.IsNullOrEmpty(ledPattern))
 				{
-					await _slappyDevice.LedOn(i, ledPattern);
+					if(_slappyDevice != null)
+						await _slappyDevice.LedOn(i, ledPattern);
 				}
 
 				if (!_slackAppWatcher.IsSourceAppForeground(e.Source))
@@ -127,7 +128,8 @@ public class SlappyBellController
 						sound = slot.Sound;
 					if (!string.IsNullOrEmpty(sound))
 					{
-						await _slappyDevice.Play(sound);
+						if(_slappyDevice != null)
+							await _slappyDevice.Play(sound);
 					}
 				}
 			}
@@ -142,7 +144,8 @@ public class SlappyBellController
 			var slot = n[i];
 			if (e.Channel.Equals(slot.Channel, StringComparison.OrdinalIgnoreCase))
 			{
-				await _slappyDevice.LedOff(i);
+				if(_slappyDevice != null)
+					await _slappyDevice.LedOff(i);
 			}
 		}
 	}

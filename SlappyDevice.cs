@@ -3,23 +3,6 @@ using System.Text.RegularExpressions;
 
 namespace SlappyHub;
 
-internal class Location
-{
-    public string FilePath { get; }
-    public int Line { get; }
-}
-
-internal class SlappyDeviceException : Exception
-{
-	private Location? _location;
-    internal SlappyDeviceException(string message, Location? location=null) : base(message)
-    {
-		_location = location;
-    }
-    public string? FilePath => _location?.FilePath;
-    public int? Line => _location?.Line;
-}
-
 public class SlappyDevice
 {
     internal UsbDeviceInfo Info { init; get; }
@@ -107,12 +90,8 @@ public class SlappyDevice
         {
             port.Disconnect();
         }
-        return new UsbDeviceInfo()
-        {
-            Port = port.PortAddress,
-            Model = model,
-            Version = version
-        };
+
+        return new UsbDeviceInfo(port.PortAddress, model, version);
     }
 
     internal static async Task<SlappyDevice>  Connect(UsbDeviceInfo portInfo)

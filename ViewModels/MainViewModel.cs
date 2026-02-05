@@ -180,6 +180,8 @@ public class MainViewModel : INotifyPropertyChanged
 		SlappyBellController slappyBellController, SlackSettingsViewModel slackSettings,
 		NotifySettingsViewModel notifySettings, NotificationRouter router, UsbWatcher usbWatcher)
 	{
+		_wifiSsid = "";
+		_wifiPassword = "";
 		_settingsStore = settingsStore;
 		SoundVolume = settingsStore.Settings.Volume;
 		SoundMute = settingsStore.Settings.Mute;
@@ -236,7 +238,7 @@ public class MainViewModel : INotifyPropertyChanged
 		};
 		usbWatcher.Removed += (sender, e) =>
 		{
-			if (_connectSlappyBell.Port == e.Port)
+			if (_connectSlappyBell != null && _connectSlappyBell.Port == e.Port)
 			{
 				_connectSlappyBell = null;
 				WiFiStatusCode = (int)ReceiveMessage.ResultCode.WiFiDisconnected;
@@ -305,7 +307,7 @@ public class MainViewModel : INotifyPropertyChanged
 
 	private async Task WiFiActionAsync()
 	{
-		if (_wifiStatusCode == _wifiStatusCode == IsWiFiConnected)
+		if (IsWiFiConnected)
 		{
 			await DisconnectWiFiAsync();
 		}

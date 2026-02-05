@@ -122,7 +122,7 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 	{
 		if (_slappyDevice != null && SelectedLedPattern != null)
 		{
-			await _slappyDevice.LedOn(SlotIndex, SelectedLedPattern?.Id);
+			await _slappyDevice.LedOn(SlotIndex, SelectedLedPattern.Id);
 		}
 	}
 	private async Task StopLedPattern()
@@ -440,7 +440,7 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 	private async Task PlaySoundUrl()
 	{
 		var url = SoundUrl.Trim();
-		if (!string.IsNullOrEmpty(url))
+		if (!string.IsNullOrEmpty(url) && _slappyDevice != null)
 		{
 			var r = await _slappyDevice.Play(url);
 			if (r.Code != ReceiveMessage.ResultCode.Success)
@@ -464,7 +464,7 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 					var storageSize = 0;
 					var storageUsage = 0;
 					List<string> files = new();
-					var lines = r.Body.Split('\n');
+					var lines = r.Body != null ? r.Body.Split('\n') : [];
 					foreach (var line in lines)
 					{
 						if (line.StartsWith("Storage Usage:"))
@@ -498,11 +498,11 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 
 			AvailableSounds.Add(SoundChoice.UploadOption());
 			AvailableSounds.Add(SoundChoice.UrlOption());
-			if (saveCurrentSelection)
+			if (saveCurrentSelection && save != null)
 			{
 				SelectedSound = AvailableSounds.FirstOrDefault(x =>
 					                x.Kind == save.Kind && x.DisplayName == save.DisplayName && x.Value == save.Value)
-				                ?? AvailableSounds.First(); // なければ(なし)
+				                ?? AvailableSounds.First();
 			}
 
 			OnPropertyChanged(nameof(AvailableSounds));
@@ -698,8 +698,8 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 	// =========================
 	// Commands / events
 	// =========================
-	public ICommand ApplyCommand { get; }
-	public ICommand CloseCommand { get; }
+//	public ICommand ApplyCommand { get; }
+//	public ICommand CloseCommand { get; }
 	public ICommand OkCommand { get; }
 	public ICommand CancelCommand { get; }
 

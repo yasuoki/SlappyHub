@@ -254,7 +254,7 @@ public class UsbDevicePort : IDisposable
 				port.DiscardOutBuffer();
 				await Task.Delay(800);
 			}
-			catch (Exception ex)
+			catch (Exception )
 			{
 				port.Close();
 				throw;

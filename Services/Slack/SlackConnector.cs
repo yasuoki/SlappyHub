@@ -68,6 +68,7 @@ public class SlackConnector : IEventHandler<MessageEvent>
 
     public async Task Handle(MessageEvent slackEvent)
     {
+        if(_slack == null) return;
         var userName = "";
         try
         {

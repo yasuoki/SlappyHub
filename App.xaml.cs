@@ -1,7 +1,6 @@
 ﻿using System.Globalization;
 using System.IO;
 using System.Windows;
-using SlappyHub.WebServer;
 using Microsoft.Extensions.DependencyInjection;
 
 using SlappyHub.Services;
@@ -47,8 +46,8 @@ public partial class App : Application
         Services.GetRequiredService<NotifyExtension>().Start();
         Services.GetRequiredService<SlackAppWatcher>().Start();
         Services.GetRequiredService<NotificationRouter>().Start();
-        Services.GetRequiredService<MessageSourceController>().Start();
-        Services.GetRequiredService<SlappyBellController>().Start();
+        _ = Services.GetRequiredService<MessageSourceController>().Start();
+        _ = Services.GetRequiredService<SlappyBellController>().Start();
         Services.GetRequiredService<UsbWatcher>().Start();
         
         InitializeTrayIcon();
