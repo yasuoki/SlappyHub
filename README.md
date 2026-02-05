@@ -78,5 +78,96 @@ users:read
 ※ この設定は **Slackボット連携モードを使用する場合のみ必要** です。  
 ※ Slackはひとつのワークスペースに同時に接続するソケットモードコネクションを制限しています。多くの人が参加するワークスペースでは接続数の制約にかかる可能性があります。
 
+## Extension
+JavaScriptで拡張することにより、メールなどSlack以外の通知を行うことができます。  
+この仕組みは、Windows通知とアプリケーションのウィンドウの状態変化の監視がベースとなっており、JavaScriptで希望するアプリケーションに応じたフィルタリングを行うことで実現されます。
+JavaScriptはSlappyHub.exeと同じディレクトリに配置した、`slappy_extension.js`ファイルに記述します。  
+SlappyHubは、`slappy_extension.js`ファイルの存在と更新を監視し、常に最新の状態で実行されます。
 
+### 通知の生成
+`slappy_extension.js`に次のようなonNotify関数を定義します。
+
+``` javascript
+onNotify = function(app, title, body) {
+//	Log.print(`onNotify(app=${app} title=${title} body=${body})`);
+	if(app.match(/thunderbird/i)) {
+		var seg = body.split(":");
+		if(seg.length >= 2) {
+			var sender = seg[0];
+			if(sender.endsWith(" より")) {
+				sender = sender.slice(0,-3);
+			}
+			body = seg.filter(n => n!=0).join();
+			var e = new NotificationEvent("thunderbird","[Mail]",sender,body);
+			e.LedPattern = "ff0000,00ff00";
+			e.Sound = "butuyoku.mp3";
+		}
+	}
+	return null;
+}
+```
+このコード例は、Thunderbirdメーラの着信を通知しています。  
+onNotify関数は、Windows通知に新しい通知が到着すると呼び出され、戻り値としてNotificationEventオブジェクトを返すと通知の候補となります。  
+
+onNotify関数の引数は以下の意味を持ちます。
+- app: Windows通知を発行したアプリケーション名
+- title: Windows通知のタイトル
+- body: Windows通知の本文
+
+NotificationEventコンストラクタは以下の引数を取ります。
+``` javascript
+NotificationEvent(source,channel,sender,body)
+```
+- source: 通知元のアプリケーション
+- channel: 通知するチャンネル名
+- sender: 送信者
+- body: 通知の本文
+
+生成したNotificationEventオブジェクトのchannelが、SlappyBellの通知スロット（キノコ）の定義に一致すると、そのスロットで通知されますが、一致する定義がない場合には通知されません。  
+また、設定で送信者と本文のフィルターが指定され、senderやbodyがマッチする場合も通知されません。  
+通知元アプリケーションを示すsourceは、アプリケーションのウィンドウ状態と通知の制御で使用されます。  
+通知される際のLED発光パターンと着信音は設定に従いますが、NotificationEventオブジェクトのLedPatternとSoundプロパティで、設定とは別の通知方法に変更することもできます。  
+
+### LEDの消灯
+SlappyBellの通知で点灯したLEDは、対応するアプリケーションのウィンドウが前面なった時や、さらにウィンドウタイトルが特定の状態に変換したときに消灯します。  
+これらの状態検知は、次のように`onForeground`関数と`onTitleChange`関数を定義することで行われます。
+
+```javascript
+onForeground = function(processName,title) {
+//	Log.print(`onForeground(processName=${processName} title=${title})`);
+	if(processName.match(/thunderbird/i)) {
+		return new ViewChangeEvent("thunderbird", "[Mail]", "");
+	}
+	return null;
+}
+
+onTitleChange = function(processName,title) {
+//	Log.print(`onTitleChange(processName=${processName} title=${title})`);
+	return null;
+}
+```
+このコード例は、Thunderbirdメーラの通知LEDを消灯する状態を定義しています。  
+`onForeground`関数は、デスクトップ上でウィンドウの前後関係が変化したときに呼び出され、`onTitleChange`関数は最前面のウィンドウのタイトルが変化したときに呼び出されます。  
+どちらの関数もLEDを消灯するべき状態になったと判断した場合に、ViewCHangeEventオブジェクトを戻り値として返します。
+
+コード例では、`onForeground`関数ではThunderbirdメーラが前面に出たことを検知すると、ViewChangeEventを生成して戻り値として返し、"[Mail]"スロットのLEDを消灯するようにSlappyHubに指示しています。  
+`onTitleChange`関数は常にnullを返し、ウィンドウタイトルの変化は無視されます。
+
+これらの関数の引数は以下の意味を持ちます。
+- processName: 最前面またはタイトルの変化したウィンドウを表示しているプロセスの名前
+- title: ウィンドウタイトル
+
+ViewChangeEventコンストラクタは以下の引数を取ります。
+``` javascript
+ViewChangeEvent(source,channel,sender)
+```
+- source: 通知元のアプリケーション
+- channel: 通知するチャンネル名
+- sender: 送信者
+
+※ sourceとsenderは、現在SlappyHub内で使用されていませんが、適切な値を指定するようにしてください。
+
+### ログの出力
+記述したJavaScriptにエラーがあったり例外が発生すると、`slappy_extension.js`ファイルと同じディレクトリに`slappy_hub.log`ファイルにその内容がログ出力されます。  
+また、Log.print(text)関数を呼び出すことでも、ログを出力できます。
 
