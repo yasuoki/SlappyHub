@@ -44,10 +44,7 @@ public class SlappyBellController
 		{
 			if(!_isStarted || _slappyDevice == null)
 				return;
-			if (e.Channel == "[DM]")
-				await OnDirectMessage(e);
-			else
-				await OnChannelMessage(e);
+			await OnChannelMessage(e);
 		};
 		
 		router.OnChangeView += async (sender, e) =>
@@ -97,46 +94,6 @@ public class SlappyBellController
 			}
 		}
 	}
-	
-	private async Task OnDirectMessage(NotificationEvent e)
-	{
-		var n = _settings.NotifySettings;
-		for(int i = 0; i < n.Length; i++)
-		{
-			var slot = n[i];
-			var senderFilter = _senderFilter[i];
-			var textFilter = _textFilter[i];
-			if (e.Channel.Equals(slot.Channel, StringComparison.OrdinalIgnoreCase))
-			{
-				if(senderFilter.Contains(e.Sender))
-					return;
-				foreach (var filter in textFilter)
-				{
-					if (e.Text.Contains(filter))
-						return;
-				}
-
-				var ledPattern = e.LedPattern;
-				if (string.IsNullOrEmpty(ledPattern))
-					ledPattern = slot.LedPattern;
-				if (!string.IsNullOrEmpty(ledPattern))
-				{
-					await _slappyDevice.LedOn(i, ledPattern);
-				}
-
-				if (!_slackAppWatcher.IsSourceAppForeground(e.Source))
-				{
-					var sound = e.Sound;
-					if(string.IsNullOrEmpty(sound))
-						sound = slot.Sound;
-					if (!string.IsNullOrEmpty(sound))
-					{
-						await _slappyDevice.Play(sound);
-					}
-				}
-			}
-		}
-	}
 
 	private async Task OnChannelMessage(NotificationEvent e)
 	{
@@ -155,16 +112,22 @@ public class SlappyBellController
 					if (e.Text.Contains(filter))
 						return;
 				}
-				if (!string.IsNullOrEmpty(slot.LedPattern))
+				var ledPattern = e.LedPattern;
+				if (string.IsNullOrEmpty(ledPattern))
+					ledPattern = slot.LedPattern;
+				if (!string.IsNullOrEmpty(ledPattern))
 				{
-					await _slappyDevice.LedOn(i, slot.LedPattern);
+					await _slappyDevice.LedOn(i, ledPattern);
 				}
 
 				if (!_slackAppWatcher.IsSourceAppForeground(e.Source))
 				{
-					if (!string.IsNullOrEmpty(slot.Sound))
+					var sound = e.Sound;
+					if(string.IsNullOrEmpty(sound))
+						sound = slot.Sound;
+					if (!string.IsNullOrEmpty(sound))
 					{
-						await _slappyDevice.Play(slot.Sound);
+						await _slappyDevice.Play(sound);
 					}
 				}
 			}
