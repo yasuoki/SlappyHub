@@ -38,10 +38,7 @@ public sealed class NotificationRouter
 		{
 			if (!string.IsNullOrEmpty(slot.Channel))
 			{
-				if(!slot.Channel.Equals("[DM]", StringComparison.OrdinalIgnoreCase))
-				{
-					watchChannels.Add(slot.Channel);
-				}
+				watchChannels.Add(slot.Channel);
 			}
 		}
 		_watchDirectMessages = settings.EnableDirectMessage || settings.ChannelSource == ChannelSourceMode.WindowsNotify;
