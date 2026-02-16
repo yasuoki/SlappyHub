@@ -384,7 +384,7 @@
             <TextBlock>
                 <Hyperlink NavigateUri="{x:Static local:AppInfo.RepoUrl}"
                            RequestNavigate="Repo_RequestNavigate">
-                    Document / Soucr Code(GitHub)
+                    Document / Source Code(GitHub)
                 </Hyperlink>
             </TextBlock>
         </StackPanel>
