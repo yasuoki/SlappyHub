@@ -79,6 +79,12 @@ public class SlappyDevice
             {
                 return null;
             }
+            
+            var verSeg = version.Split('.');
+            if (verSeg.Length != 3) return null;
+            int seg0 = int.Parse(verSeg[0].Trim()); 
+            int seg1 = int.Parse(verSeg[1].Trim()); 
+            if(seg0 != 1 || (seg1 != 0 && seg1 != 1)) return null;
         }
         catch (Exception e)
         {
