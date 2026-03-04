@@ -141,6 +141,19 @@ public class MainViewModel : INotifyPropertyChanged
 			MessageBox.Show($"Failed to connect to device {device.Description}\r\n{e.Message}");
 		}
 	}
+
+	private void OnSlappyBellDisconnected()
+	{
+		_slappyDevice = null;
+		ConnectingDeviceAddress = null;
+		WiFiStatusCode = (int)ReceiveMessage.ResultCode.WiFiDisconnected;
+		OnPropertyChanged(nameof(IsSlappyBellConnected));
+		OnPropertyChanged(nameof(ConnectedDeviceAddress));
+		OnPropertyChanged(nameof(ConnectedDeviceText));
+		OnPropertyChanged(nameof(DevicePorts));
+		_bleWatcher.Start();		
+	}
+	
 	public void CommitSlappyBellConnection()
 	{
 		var newAddress = ConnectedDeviceAddress;
@@ -426,7 +439,9 @@ public class MainViewModel : INotifyPropertyChanged
 		usbWatcher.Removed += (sender, port) =>
 		{
 			if (port.Address == _slappyDevice?.Driver?.Port.Address)
-				return;
+			{
+				OnSlappyBellDisconnected();
+			}
 			Application.Current.Dispatcher.Invoke(() =>
 			{
 				_devicePorts.Remove(port);
@@ -488,14 +503,7 @@ public class MainViewModel : INotifyPropertyChanged
 		};
 		slappyBellController.SlappyDeviceDisconnected += (sender, e) =>
 		{
-			_slappyDevice = null;
-			ConnectingDeviceAddress = null;
-			WiFiStatusCode = (int)ReceiveMessage.ResultCode.WiFiDisconnected;
-			OnPropertyChanged(nameof(IsSlappyBellConnected));
-			OnPropertyChanged(nameof(ConnectedDeviceAddress));
-			OnPropertyChanged(nameof(ConnectedDeviceText));
-			OnPropertyChanged(nameof(DevicePorts));
-			_bleWatcher.Start();
+			OnSlappyBellDisconnected();
 		};
 		
 		router.OnNotifySourceChange += (_, e) =>
