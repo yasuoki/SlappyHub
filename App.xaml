@@ -9,11 +9,14 @@
         <common:InvertBoolConverter x:Key="InvertBoolConverter" />
         <common:InvertBoolToVisibilityConverter x:Key="InvertBoolToVisibilityConverter" />
         <common:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        <common:NullToBoolConverter x:Key="NullToBoolConverter" />
         <common:StringNullOrEmptyToVisibilityConverter x:Key="StringNullOrEmptyToVisibilityConverter" />
         <common:EnumEqualsToBoolConverter x:Key="EnumEqualsToBoolConverter" />
         <common:EnumEqualsToVisibilityConverter x:Key="EnumEqualsToVisibilityConverter" />
         <common:GreaterThanZeroToVisibilityConverter x:Key="GreaterThanZeroToVisibilityConverter" />
         <common:InvertBoolToVisibilityConverter x:Key="InvertBoolToVisibility"/>
+        <common:AddressEqualsConverter x:Key="AddressEqualsConverter"/>
+        <common:ConnectedDeviceConverter x:Key="ConnectedDeviceConverter"/>
         <Style TargetType="{x:Type Window}">
             <Setter Property="FontFamily" Value="Arial" />
             <Setter Property="FontSize" Value="30pt" />

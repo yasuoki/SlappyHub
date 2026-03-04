@@ -18,12 +18,14 @@ public record NotifySettings
 	public string LedPattern { get; init; } = "";
 	public string SenderFilter { get; init; } = "";
 	public string TextFilter { get; init; } = "";
-	public string Script { get; init; } = "";
 }
 
 
 public record AppSettings
 {
+	// 接続するSlappyBellの設定
+	public string? SlappyBellAddress { get; init; } = null;
+	
 	// Channelメッセージソースの設定
 	public ChannelSourceMode ChannelSource { get; init; } = ChannelSourceMode.WindowsNotify;
 

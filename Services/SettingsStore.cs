@@ -5,10 +5,22 @@ using System.Text.Json;
 
 namespace SlappyHub.Services;
 
+public class SettingsChangedEventArgs
+{
+	public AppSettings NewSettings { get; set; }
+	public AppSettings OldSettings { get; set; }
+
+	public SettingsChangedEventArgs(AppSettings newSettings, AppSettings oldSettings)
+	{
+		NewSettings = newSettings;
+		OldSettings = oldSettings;
+	}
+}
+
 public class SettingsStore
 {
 	private AppSettings? _settings;
-	public event EventHandler<AppSettings>? Changed;
+	public event EventHandler<SettingsChangedEventArgs>? Changed;
 	
 	private readonly string _path =
 		Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -59,7 +71,7 @@ public class SettingsStore
 			if (ReferenceEquals(exchanged, oldValue))
 			{
 				Save(newValue);
-				Changed?.Invoke(this, newValue);
+				Changed?.Invoke(this, new SettingsChangedEventArgs(newValue, oldValue));
 				return;
 			}
 		}

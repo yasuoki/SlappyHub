@@ -26,6 +26,7 @@ public partial class App : Application
         base.OnStartup(e);
         var sc = new ServiceCollection();
         sc.AddSingleton<UsbWatcher>();
+        sc.AddSingleton<BleWatcher>();
         sc.AddSingleton<SettingsStore>();
         sc.AddSingleton<NotifyExtension>();
         sc.AddSingleton<SlackConnector>();
@@ -49,6 +50,7 @@ public partial class App : Application
         _ = Services.GetRequiredService<MessageSourceController>().Start();
         _ = Services.GetRequiredService<SlappyBellController>().Start();
         Services.GetRequiredService<UsbWatcher>().Start();
+        Services.GetRequiredService<BleWatcher>().Start();
         
         InitializeTrayIcon();
     }

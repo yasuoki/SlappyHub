@@ -152,7 +152,8 @@
                              MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave" MouseLeftButtonUp="VolumeIcon_Click">
                         <Ellipse.ToolTip>
                             <StackPanel>
-                                <TextBlock Text="{Binding SoundVolumeText, StringFormat=通知音量 {0}%}" FontWeight="SemiBold" Foreground="White" />
+                                <TextBlock Text="{Binding SoundVolumeText, StringFormat=通知音量 {0}%}"
+                                           FontWeight="SemiBold" Foreground="White" />
                                 <TextBlock Text="{Binding SoundMuteText, StringFormat=ミュート {0}}" Foreground="#CCFFFFFF" />
                             </StackPanel>
                         </Ellipse.ToolTip>
@@ -200,13 +201,14 @@
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <!-- 既定：非ミュート -->
-                                                    <Setter Property="Text" Value="🔊"/>
+                                                    <Setter Property="Text" Value="🔊" />
 
                                                     <Style.Triggers>
                                                         <!-- 親ToggleButtonのIsCheckedで切り替える（確実） -->
-                                                        <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
-                                                                     Value="True">
-                                                            <Setter Property="Text" Value="🔇"/>
+                                                        <DataTrigger
+                                                            Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                                                            Value="True">
+                                                            <Setter Property="Text" Value="🔇" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -231,8 +233,7 @@
                                 <!-- スライダー -->
                                 <Slider Grid.Row="2"
                                         Minimum="0" Maximum="100"
-                                        Value="{Binding SoundVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         />
+                                        Value="{Binding SoundVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             </Grid>
                         </Border>
                     </Popup>
@@ -245,7 +246,7 @@
                     <Ellipse x:Name="wifi_icon"
                              Style="{StaticResource HotspotShapeStyle}"
                              Canvas.Left="979.6" Canvas.Top="81.5" Width="106" Height="106"
-                             MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave"  MouseLeftButtonUp="WiFiIcon_Click">
+                             MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave" MouseLeftButtonUp="WiFiIcon_Click">
                         <Ellipse.ToolTip>
                             <StackPanel>
                                 <TextBlock Text="Wi-Fi接続" FontWeight="SemiBold" Foreground="White" />
@@ -273,26 +274,27 @@
 
                             <StackPanel MinWidth="280">
 
-                                <TextBlock Text="Wi-Fi 設定" Foreground="#E6FFFFFF" Margin="0,0,0,8"/>
+                                <TextBlock Text="Wi-Fi 設定" Foreground="#E6FFFFFF" Margin="0,0,0,8" />
 
-                                <TextBlock Text="SSID" Foreground="#E6FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="SSID" Foreground="#E6FFFFFF" Margin="0,0,0,4" />
                                 <TextBox Text="{Binding WiFiSSID, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         Margin="0,0,0,8"/>
+                                         Margin="0,0,0,8" />
 
-                                <TextBlock Text="パスワード" Foreground="#E6FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="パスワード" Foreground="#E6FFFFFF" Margin="0,0,0,4" />
                                 <PasswordBox PasswordChanged="WiFiPassword_PasswordChanged"
-                                             Margin="0,0,0,8"/>
+                                             Margin="0,0,0,8" />
 
                                 <Button Content="{Binding WiFiButtonText}"
                                         Command="{Binding WiFiActionCommand}"
-                                        Margin="0,0,0,10"/>
+                                        Margin="0,0,0,10" />
 
-                                <TextBlock Text="{Binding WiFiStatusText}" Foreground="#E6FFFFFF" TextWrapping="Wrap" Margin="0,8,0,8"/>
+                                <TextBlock Text="{Binding WiFiStatusText}" Foreground="#E6FFFFFF" TextWrapping="Wrap"
+                                           Margin="0,8,0,8" />
 
                             </StackPanel>
                         </Border>
                     </Popup>
-                    
+
                     <Ellipse x:Name="usb_mask"
                              Canvas.Left="1133.3" Canvas.Top="81.5" Width="106" Height="106"
                              Fill="#80AAAAAA"
@@ -301,14 +303,137 @@
                     <Ellipse x:Name="usb_icon" Tag="usb_icon"
                              Style="{StaticResource HotspotShapeStyle}"
                              Canvas.Left="1133.3" Canvas.Top="81.5" Width="106" Height="106"
-                             MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave">
+                             MouseEnter="Hotspot_Enter" MouseLeave="Hotspot_Leave"
+                             MouseLeftButtonUp="DeviceSelectorIcon_Click">
                         <Ellipse.ToolTip>
                             <StackPanel>
                                 <TextBlock Text="SlappyBellの接続" FontWeight="SemiBold" Foreground="White" />
-                                <TextBlock Text="{Binding ConnectSlappyBell}" Foreground="#CCFFFFFF" />
+                                <TextBlock Text="{Binding ConnectedDeviceText}" Foreground="#CCFFFFFF" />
                             </StackPanel>
                         </Ellipse.ToolTip>
                     </Ellipse>
+                    <Popup x:Name="DeviceSelectorPopup"
+                           PlacementTarget="{Binding ElementName=usb_icon}"
+                           Placement="Bottom"
+                           VerticalOffset="8"
+                           AllowsTransparency="True"
+                           PopupAnimation="Fade"
+                           StaysOpen="False"
+                           Closed="DeviceSelectorPopup_Closed">
+
+                        <Border Padding="10"
+                                CornerRadius="12"
+                                Background="#FF1F1F1F"
+                                BorderBrush="#33000000"
+                                BorderThickness="1">
+
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="18"
+                                                  ShadowDepth="6"
+                                                  Opacity="0.25" />
+                            </Border.Effect>
+
+                            <StackPanel MinWidth="260">
+
+                                <TextBlock Text="SlappyBell 接続"
+                                           Foreground="#E6FFFFFF"
+                                           Margin="0,0,0,8" />
+
+                                <ListBox ItemsSource="{Binding DevicePorts}"
+                                         IsHitTestVisible="{Binding IsSlappyBellConnecting, Converter={StaticResource InvertBoolConverter}}"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="6"
+                                                    CornerRadius="6"
+                                                    Background="Transparent">
+
+                                                <Grid MouseLeftButtonUp="DeviceSelectorItem_Click">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="24" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <!-- 接続マーク -->
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="●"
+                                                               FontSize="14"
+                                                               VerticalAlignment="Center">
+
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="Gray" />
+
+                                                                <Style.Triggers>
+
+                                                                    <!-- 接続処理中 = 青 -->
+                                                                    <DataTrigger Value="True">
+                                                                        <DataTrigger.Binding>
+                                                                            <MultiBinding
+                                                                                Converter="{StaticResource AddressEqualsConverter}">
+                                                                                <Binding Path="Address" />
+                                                                                <Binding
+                                                                                    Path="DataContext.ConnectingDeviceAddress"
+                                                                                    RelativeSource="{RelativeSource AncestorType=Window}" />
+                                                                            </MultiBinding>
+                                                                        </DataTrigger.Binding>
+                                                                        <Setter Property="Foreground" Value="#4FC3F7" />
+
+                                                                        <DataTrigger.EnterActions>
+                                                                            <BeginStoryboard x:Name="BlinkStoryboard">
+                                                                                <Storyboard RepeatBehavior="Forever"
+                                                                                    AutoReverse="True">
+                                                                                    <DoubleAnimation
+                                                                                        Storyboard.TargetProperty="Opacity"
+                                                                                        From="1"
+                                                                                        To="0.2"
+                                                                                        Duration="0:0:0.5" />
+                                                                                </Storyboard>
+                                                                            </BeginStoryboard>
+                                                                        </DataTrigger.EnterActions>
+
+                                                                        <DataTrigger.ExitActions>
+                                                                            <StopStoryboard  BeginStoryboardName="BlinkStoryboard"/>
+                                                                        </DataTrigger.ExitActions>
+
+                                                                    </DataTrigger>
+                                                                    <!-- 接続済み = 緑 -->
+                                                                    <DataTrigger Value="True">
+                                                                        <DataTrigger.Binding>
+                                                                            <MultiBinding
+                                                                                Converter="{StaticResource AddressEqualsConverter}">
+                                                                                <Binding Path="Address" />
+                                                                                <Binding
+                                                                                    Path="DataContext.ConnectedDeviceAddress"
+                                                                                    RelativeSource="{RelativeSource AncestorType=Window}" />
+                                                                            </MultiBinding>
+                                                                        </DataTrigger.Binding>
+                                                                        <Setter Property="Foreground" Value="LimeGreen" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+
+                                                    </TextBlock>
+
+                                                    <!-- デバイス名 -->
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding Description}"
+                                                               Foreground="White"
+                                                               VerticalAlignment="Center" />
+                                                </Grid>
+
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+
+                                </ListBox>
+
+                            </StackPanel>
+                        </Border>
+                    </Popup>
 
                     <Path x:Name="Fig0"
                           Style="{StaticResource HotspotShapeStyle}"
@@ -379,7 +504,7 @@
                     Margin="8"
                     Opacity="0.85">
             <TextBlock Text="SlappyHub ver" />
-            <TextBlock Text="{x:Static local:AppInfo.Version}" Margin="2,0,10,0"/>
+            <TextBlock Text="{x:Static local:AppInfo.Version}" Margin="2,0,10,0" />
 
             <TextBlock>
                 <Hyperlink NavigateUri="{x:Static local:AppInfo.RepoUrl}"
@@ -395,7 +520,6 @@
               Panel.ZIndex="999"
               MouseLeftButtonUp="SlackOverlay_BackgroundClick">
 
-            <!-- ドロワー本体（下からスライドイン） -->
             <Border x:Name="SlackDrawer"
                     Background="White"
                     CornerRadius="16,16,0,0"
@@ -408,7 +532,6 @@
                     <TranslateTransform x:Name="SlackDrawerTransform" Y="700" />
                 </Border.RenderTransform>
 
-                <!-- ここに既に作成済みの UserControl を差し込む -->
                 <views:SlackSettingsView DataContext="{Binding SlackSettings}" />
             </Border>
         </Grid>

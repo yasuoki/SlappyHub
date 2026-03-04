@@ -1,4 +1,3 @@
-using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -10,8 +9,6 @@ using System.Windows.Media;
 using SlappyHub.Common;
 using SlappyHub.Services;
 using LinearGradientBrush = System.Windows.Media.LinearGradientBrush;
-using System.Windows;
-using Microsoft.Win32;
 using Application = System.Windows.Application;
 using Color = System.Windows.Media.Color;
 using MessageBox = System.Windows.MessageBox;
@@ -23,6 +20,7 @@ namespace SlappyHub.ViewModels;
 public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 {
 	private SlappyDevice? _slappyDevice;
+	private bool _invalidSoundFiles = true;
 
 	public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -378,7 +376,6 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 			UploadPercent = 0;
 			UploadStatus = "準備中…";
 
-			// local はバリデーション済みとのことなので読み込みのみ
 			byte[] data = await File.ReadAllBytesAsync(local);
 
 			var progress = new Progress<TransferProgress>(p =>
@@ -450,8 +447,8 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 
 	private async Task UpdateDeviceSoundFileList(bool saveCurrentSelection = true)
 	{
-		await Application.Current.Dispatcher.InvokeAsync(async () =>
-		{
+//		await Application.Current.Dispatcher.InvokeAsync(async () =>
+//		{
 			var save = SelectedSound;
 
 			AvailableSounds.Clear();
@@ -474,26 +471,36 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 							{
 								storageUsage = int.Parse(seg[0].Trim());
 								storageSize = int.Parse(seg[1].Trim());
-								Debug.WriteLine($"strorage size: {storageSize}, usage: {storageUsage}");
 							}
 						}
 						else if (line.StartsWith("Files:"))
 						{
 							// do nothing
-							Debug.WriteLine("avalable files");
 						}
 						else
 						{
 							var p = line.LastIndexOf(" ");
 							var fileName = line.Substring(0, p).Trim();
 							files.Add(fileName);
-							Debug.WriteLine($"file: {fileName}");
 						}
 					}
 
 					foreach (var file in files)
+					{
+						Debug.WriteLine($"file: {file}");
 						AvailableSounds.Add(SoundChoice.DeviceFile(file));
+					}
 				}
+
+				_invalidSoundFiles = false;
+
+				/*
+				await Task.Delay(1000);
+				var r2 = await _slappyDevice.LedOn(0, "004400");
+				Debug.WriteLine($"led on 0: {r2.Code}");
+				var r3 = await _slappyDevice.LedOn(1, "004400");
+				Debug.WriteLine($"led on 1: {r3.Code}");
+			*/
 			}
 
 			AvailableSounds.Add(SoundChoice.UploadOption());
@@ -506,7 +513,7 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 			}
 
 			OnPropertyChanged(nameof(AvailableSounds));
-		});
+//		});
 	}
 
 	// =========================
@@ -907,21 +914,20 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 		slappyBellController.SlappyDeviceConnected += async (sender, device) =>
 		{
 			_slappyDevice = device;
-			await UpdateDeviceSoundFileList();
+			_invalidSoundFiles = true;
+			//await UpdateDeviceSoundFileList();
 		};
 		slappyBellController.SlappyDeviceDisconnected += async (sender, device) =>
 		{
 			_slappyDevice = null;
-			await UpdateDeviceSoundFileList();
+			_invalidSoundFiles = true;
+			//await UpdateDeviceSoundFileList();
 		};
 
 		RaiseAll();
 	}
 
-	// =========================
-	// Slack設定と同じ：LoadFrom / ApplyTo
-	// =========================
-	public void LoadFrom(AppSettings s, int slotIndex)
+	public async void LoadFrom(AppSettings s, int slotIndex)
 	{
 		SlotIndex = slotIndex;
 
@@ -935,7 +941,8 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 			5 => s.Slot5,
 			_ => null
 		} ?? new NotifySettings();
-
+		if(_invalidSoundFiles) 
+			await UpdateDeviceSoundFileList();
 		LoadNotifySettingsToEditor(ns);
 		RaiseAll();
 	}
@@ -1045,7 +1052,7 @@ public sealed class NotifySettingsViewModel : INotifyPropertyChanged
 	private void DecodeSoundForUi(string soundValue)
 	{
 		var v = (soundValue ?? "").Trim();
-
+		Debug.WriteLine($"DecodeSoundForUi: {v} files count = {AvailableSounds.Count}");
 		if (v.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
 		{
 			SelectedSound = AvailableSounds.FirstOrDefault(x => x.Kind == SoundChoiceKind.Url) ?? SelectedSound;

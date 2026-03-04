@@ -1,16 +1,31 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
+using SlappyHub.Models;
 
 namespace SlappyHub;
 
 public class SlappyDevice
 {
-    internal UsbDeviceInfo Info { init; get; }
-    internal UsbDevicePort Port { init; get; }
+    public PortDriver? Driver => _driver;
+    
+    public string? Maker => _maker;
+    public string? Model => _model;
+    public string? Version => _version;
+    public string? Description => _description;
+    public bool IsConnected => _driver != null && _driver.Port.IsConnected;
+
+    private PortDriver? _driver;
+    private string? _maker;
+    private string? _model;
+    private string? _version;
+    private string? _description;
+    private readonly object _rxLock = new();
+    private readonly object _lineWaitLock = new();
+    private readonly ConcurrentQueue<TaskCompletionSource<ReceiveMessage>> _pendingResponses = new();
+    private readonly List<(Func<string, bool> pred, TaskCompletionSource<string> tcs)> _lineWaiters = new();
     
     public event EventHandler<int>? OnWiFiStatusChanged;
-
-
     private UInt16 crc16(string buff)
     {
         UInt16 result = 0;
@@ -28,36 +43,48 @@ public class SlappyDevice
 
         return result;
     }
+    private void FeedLine(string line)
+    {
+        List<TaskCompletionSource<string>>? hit = null;
 
-    protected SlappyDevice(UsbDeviceInfo portInfo)
-    {
-        Info = portInfo;
-        Port = new UsbDevicePort(portInfo.Port);
-        Port.OnNotify += (sender, args) =>
+        lock (_lineWaitLock)
         {
-            Debug.WriteLine($"Notify: {args.Code} {args.Message}");
-            switch (args.Code)
+            for (int i = _lineWaiters.Count - 1; i >= 0; i--)
             {
-                case ReceiveMessage.ResultCode.WiFiConnected:
-                case ReceiveMessage.ResultCode.WiFiSsidNotFound:
-                case ReceiveMessage.ResultCode.WiFiAuthFail:
-                case ReceiveMessage.ResultCode.WiFiDisconnected:
-                    OnWiFiStatusChanged?.Invoke(this, (int)args.Code);
-                    break;
+                var (pred, tcs) = _lineWaiters[i];
+                if (pred(line))
+                {
+                    _lineWaiters.RemoveAt(i);
+                    hit ??= new List<TaskCompletionSource<string>>();
+                    hit.Add(tcs);
+                }
             }
-        };
+        }
+
+        if (hit != null)
+        {
+            foreach (var tcs in hit)
+                tcs.TrySetResult(line);
+        }
     }
-    
-    internal static async Task<UsbDeviceInfo?> DetectDevice(UsbDevicePort port)
+
+    public SlappyDevice()
     {
-        var model = "";
-        var version = "";
+    }
+
+    private async Task DetectDevice(PortDriver driver)
+    {
+        Debug.WriteLine($"DetectDevice: {driver.Port.Address}");
+        string? maker = null;
+        string? model = null;
+        string? version = null;
         try
         {
-            await port.ConnectAsync();
-            await port.SendRawAsync("\n");
-            var ret = await port.WaitForLineAsync(
-                line =>Regex.IsMatch(line, "Yonabe Factory */ *SlappyBell"),
+            await driver.ConnectAsync();
+            await Task.Delay(500);
+            await driver.SendRawAsync("\n");
+            var ret = await driver.WaitForLineAsync(
+                line => Regex.IsMatch(line, "Yonabe Factory */ *SlappyBell"),
                 TimeSpan.FromSeconds(3));
             var segs = ret.Split('/');
             if (segs.Length == 3)
@@ -65,70 +92,112 @@ public class SlappyDevice
                 var _maker = segs[0].Trim();
                 var _model = segs[1].Trim();
                 var _ver = segs[2].Trim();
-                if (_maker == "Yonabe Factory")
+                if (_maker.Contains("Yonabe Factory"))
                 {
-                    if (_model == "SlappyBell")
+                    if (_model.Contains("SlappyBell"))
                     {
+                        maker = _maker;
                         model = _model;
                         version = _ver;
                     }
                 }
             }
-
-            if (string.IsNullOrEmpty(model) || string.IsNullOrEmpty(version))
+            if (string.IsNullOrEmpty(maker) || string.IsNullOrEmpty(model) || string.IsNullOrEmpty(version))
             {
-                return null;
+                throw new Exception("未知のデバイスです");
             }
             
             var verSeg = version.Split('.');
-            if (verSeg.Length != 3) return null;
+            if (verSeg.Length != 3)
+            {
+                throw new Exception($"version {version} は非対応のフォーマットです");
+            }
             int seg0 = int.Parse(verSeg[0].Trim()); 
-            int seg1 = int.Parse(verSeg[1].Trim()); 
-            if(seg0 != 1 || (seg1 != 0 && seg1 != 1)) return null;
+            int seg1 = int.Parse(verSeg[1].Trim());
+            if (seg0 != 1 || seg1 != 2)
+            {
+                throw new Exception($"version {version} は非対応のバージョンです");
+            }
         }
         catch (Exception e)
         {
-            port.Disconnect();
-            Debug.WriteLine(e.Message);
-            return null;
+            Debug.WriteLine($"DetectDevice exception {e.Message}");
+            driver.Disconnect();
+            throw new Exception($"{driver.Port.PortType}:{driver.Port.Address}へ接続できません\r\n{e.Message}");
         }
-        finally
+        _maker = maker;
+        _model = model;
+        _version = version;
+        _description = $"{driver.Port.PortType}: {model}/{version}";
+        _driver = driver;
+    }
+
+    public async Task Attach(PortDriver driver)
+    {
+        if (_driver != driver)
         {
-            port.Disconnect();
+            await Detouch();
         }
-
-        return new UsbDeviceInfo(port.PortAddress, model, version);
+        await DetectDevice(driver);
+        _driver!.OnNotify += onNotify;
     }
 
-    internal static async Task<SlappyDevice>  Connect(UsbDeviceInfo portInfo)
+    public async Task Detouch()
     {
-        var device = new SlappyDevice(portInfo);
-        
-        await device.Port.ConnectAsync();
-        await Task.Delay(TimeSpan.FromMilliseconds(500));
-        return device;
+        if (_driver != null)
+        {
+            _driver.OnNotify -= onNotify;
+            if (_driver.Port.IsConnected)
+            {
+                await Bye();
+                _driver.Disconnect();
+            }
+            _driver = null;
+        }
     }
 
-    internal void Disconnect()
+    private void onNotify(object? sebder, ReceiveMessage message)
     {
-        Port.Disconnect();
+        Debug.WriteLine($"Notify: {message.Code} {message.Message}");
+        switch (message.Code)
+        {
+            case ReceiveMessage.ResultCode.WiFiConnected:
+            case ReceiveMessage.ResultCode.WiFiSsidNotFound:
+            case ReceiveMessage.ResultCode.WiFiAuthFail:
+            case ReceiveMessage.ResultCode.WiFiDisconnected:
+                OnWiFiStatusChanged?.Invoke(this, (int)message.Code);
+                break;
+        }
     }
-
+    
     private async Task<ReceiveMessage> SendCommandAsync(string cmd, TimeSpan? timeout = null)
     {
         ReceiveMessage ret;
         try
         {
-            ret = await Port.SendReceiveAsync(cmd + "\n", timeout);
-            if(ret.Code != ReceiveMessage.ResultCode.Success) 
-                Debug.WriteLine($"SlappyDevice: receive response {ret.Type.ToString()} {ret.Code} <{ret.Message}>\n<{ret.Body}>");
+            if (_driver == null)
+            {
+                ret = new ReceiveMessage(ReceiveMessage.ResultCode.Error, "Device not attached");
+                Debug.WriteLine($"{DateTime.Now} SlappyDevice: device not attached");
+            }
+            else
+            {
+                ret = await _driver.SendReceiveAsync(cmd + "\n", timeout);
+                if (ret.Code != ReceiveMessage.ResultCode.Success)
+                    Debug.WriteLine(
+                        $"{DateTime.Now} SlappyDevice: receive response {ret.Type.ToString()} {ret.Code} <{ret.Message}>\n<{ret.Body}>");
+            }
         }
         catch (Exception e)
         {
             ret = new ReceiveMessage(ReceiveMessage.ResultCode.Error, e.Message);
-            Debug.WriteLine($"SlappyDevice: receive response {ret.Type.ToString()} {ret.Code} <{ret.Message}>\n<{ret.Body}>");
+            Debug.WriteLine($"{DateTime.Now} SlappyDevice: receive response {ret.Type.ToString()} {ret.Code} <{ret.Message}>\n<{ret.Body}>");
         }
         return ret;
+    }
+    public async Task<ReceiveMessage> Bye()
+    {
+        return await SendCommandAsync("bye");
     }
     public async Task<ReceiveMessage> WiFiStatus()
     {
@@ -180,9 +249,18 @@ public class SlappyDevice
         Debug.WriteLine($"send {cmd}");
         try
         {
-            var r = await Port.SendReceiveAsync(cmd + "\n", data, progress, TimeSpan.FromMilliseconds(100));
-            Debug.WriteLine($"receive response '{r.Type.ToString()} {r.Code} {r.Message}'");
-            return r;
+            ReceiveMessage ret;
+            if (_driver == null)
+            {
+                ret = new ReceiveMessage(ReceiveMessage.ResultCode.Error, "Device not attached");
+                Debug.WriteLine("SlappyDevice: device not attached");
+            }
+            else
+            {
+                ret = await _driver.SendReceiveAsync(cmd + "\n", data, progress);
+                Debug.WriteLine($"receive response '{ret.Type.ToString()} {ret.Code} {ret.Message}'");
+            }
+            return ret;
         }
         catch (Exception e)
         {

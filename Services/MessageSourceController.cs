@@ -24,16 +24,16 @@ public class MessageSourceController
 		_windowsNotificationConnector = windowsNotificationConnector;
 		_settings = settingsStore.Settings;
 
-		_settingsStore.Changed += async (sender,newSettings) =>
+		_settingsStore.Changed += async (sender,chg) =>
 		{
 			var oldSettings = _settings;
-			_settings = newSettings;
+			_settings = chg.NewSettings;
 			if (_started)
 			{
 				var usingSlackConnector = oldSettings.ChannelSource == ChannelSourceMode.Socket;
-				var needSlackConnector = newSettings.ChannelSource == ChannelSourceMode.Socket;
+				var needSlackConnector = _settings.ChannelSource == ChannelSourceMode.Socket;
 				var usingWindowsNotification = oldSettings.ChannelSource == ChannelSourceMode.WindowsNotify || oldSettings.EnableDirectMessage;
-				var needWindowsNotificationConnector = newSettings.ChannelSource == ChannelSourceMode.WindowsNotify || newSettings.EnableDirectMessage;
+				var needWindowsNotificationConnector = _settings.ChannelSource == ChannelSourceMode.WindowsNotify || _settings.EnableDirectMessage;
 				
 				if (usingSlackConnector && !needSlackConnector)
 				{
@@ -47,12 +47,12 @@ public class MessageSourceController
 
 				if (needSlackConnector && !usingSlackConnector)
 				{
-					if(newSettings.SlackAppToken != null && newSettings.SlackBotToken != null)
-						await _slackConnector.Start(newSettings.SlackAppToken, newSettings.SlackBotToken);
+					if(_settings.SlackAppToken != null && _settings.SlackBotToken != null)
+						await _slackConnector.Start(_settings.SlackAppToken, _settings.SlackBotToken);
 				}
 				if(needWindowsNotificationConnector && !usingWindowsNotification) {
 					await _windowsNotificationConnector.Start(
-						newSettings.ChannelSource == ChannelSourceMode.WindowsNotify);
+						_settings.ChannelSource == ChannelSourceMode.WindowsNotify);
 				}
 			}
 		};

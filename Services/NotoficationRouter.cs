@@ -19,9 +19,9 @@ public sealed class NotificationRouter
 
 	public NotificationRouter(SettingsStore settingsStore, SlackAppWatcher slackAppWatcher, SlackConnector slackConnector, WindowsNotificationConnector windowsNotificationSource)
 	{
-		settingsStore.Changed += (_, newSettings) =>
+		settingsStore.Changed += (_, chg) =>
 		{
-			UpdateWatchTarget(newSettings);
+			UpdateWatchTarget(chg.NewSettings);
 		};
 		UpdateWatchTarget(settingsStore.Settings);
 		slackConnector.OnMessage += (_, e) => RouteNotify(e);
