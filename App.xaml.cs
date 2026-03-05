@@ -1,6 +1,8 @@
 ﻿using System.Globalization;
 using System.IO;
+using System.IO.Pipes;
 using System.Windows;
+using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 
 using SlappyHub.Services;
@@ -20,9 +22,32 @@ public partial class App : Application
     public IServiceProvider Services { get; private set; } = default!;
     public MainWindow? _mainWindow { get; private set; } = null;
     private NotifyIcon? _notifyIcon;
-
+    private const string MutexName = "SlappyHub.Singleton";
+    private const string PipeName = "SlappyHub.Activate";
+    private Mutex? _mutex;
+    
     protected override void OnStartup(StartupEventArgs e)
     {
+        bool created;
+
+        _mutex = new Mutex(true, MutexName, out created);
+
+        if (!created)
+        {
+            try
+            {
+                using var client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
+                client.Connect(100);
+                using var writer = new StreamWriter(client);
+                writer.WriteLine("ACTIVATE");
+                writer.Flush();
+            }
+            catch { }
+
+            Shutdown();
+            return;
+        }
+        StartPipeServer();
         base.OnStartup(e);
         var sc = new ServiceCollection();
         sc.AddSingleton<UsbWatcher>();
@@ -55,6 +80,30 @@ public partial class App : Application
         InitializeTrayIcon();
     }
     
+    private async void StartPipeServer()
+    {
+        _ = Task.Run(async () =>
+        {
+            while (true)
+            {
+                using var server = new NamedPipeServerStream("SlappyHub.Activate", PipeDirection.In);
+
+                await server.WaitForConnectionAsync();
+
+                using var reader = new StreamReader(server);
+                var msg = await reader.ReadLineAsync();
+
+                if (msg == "ACTIVATE")
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        ActivateMainWindow();
+                    });
+                }
+            }
+        });
+    }
+    
     private void InitializeTrayIcon()
     {
         var uri = new Uri("pack://application:,,,/Assets/profile.ico");
@@ -85,6 +134,16 @@ public partial class App : Application
 
         return menu;
     }
+    private void ActivateMainWindow()
+    {
+        if (MainWindow == null)
+            return;
+        ShowMainWindow();
+        MainWindow.Topmost = true;
+        MainWindow.Topmost = false;
+        MainWindow.Focus();
+    }
+    
     private void ToggleMainWindow()
     {
         if (_mainWindow == null) return;
@@ -98,7 +157,7 @@ public partial class App : Application
             ShowMainWindow();
         }
     }
-
+    
     private void ShowMainWindow()
     {
         if (_mainWindow == null) return;
