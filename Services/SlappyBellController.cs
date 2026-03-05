@@ -13,9 +13,9 @@ public class SlappyBellController
 	private List<List<string>> _senderFilter = new ();
 	private List<List<string>> _textFilter = new();
 	public event EventHandler<SlappyDevice>? SlappyDeviceConnected; 
-	public event EventHandler? SlappyDeviceDisconnected; 
+	public event EventHandler<SlappyDevice>? SlappyDeviceDisconnected; 
 
-	public SlappyBellController(SettingsStore settingsStore, SlackAppWatcher slackAppWatcher, NotificationRouter router)
+	public SlappyBellController(SettingsStore settingsStore, SlackAppWatcher slackAppWatcher, NotificationRouter router, BleWatcher bleWatcher, UsbWatcher usbWatcher, PowerWatcher powerWatcher)
 	{
 		_slappyDevice = new SlappyDevice();
 		_settings = settingsStore.Settings;
@@ -75,8 +75,8 @@ public class SlappyBellController
 	{
 		if (!_slappyDevice.IsConnected)
 			return;
+		SlappyDeviceDisconnected?.Invoke(this, _slappyDevice);
 		await _slappyDevice.Detouch();
-		SlappyDeviceDisconnected?.Invoke(this, EventArgs.Empty);
 	}
 	
 	private void OnDevicePortDisconnected(IDevicePort? port, object _)
@@ -86,7 +86,7 @@ public class SlappyBellController
 			Debug.WriteLine($"SlappyBellController::OnDevicePortDisconnected: {port.Address}");
 			if (_slappyDevice.Driver?.Port == port)
 			{
-				SlappyDeviceDisconnected?.Invoke(this, EventArgs.Empty);
+				SlappyDeviceDisconnected?.Invoke(this, _slappyDevice);
 			}
 		}
 		//Disconnect();

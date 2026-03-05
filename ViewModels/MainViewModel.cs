@@ -142,16 +142,28 @@ public class MainViewModel : INotifyPropertyChanged
 		}
 	}
 
-	private void OnSlappyBellDisconnected()
+	private void OnSlappyBellDisconnected(IDevicePort? port)
 	{
-		_slappyDevice = null;
-		ConnectingDeviceAddress = null;
-		WiFiStatusCode = (int)ReceiveMessage.ResultCode.WiFiDisconnected;
-		OnPropertyChanged(nameof(IsSlappyBellConnected));
-		OnPropertyChanged(nameof(ConnectedDeviceAddress));
-		OnPropertyChanged(nameof(ConnectedDeviceText));
-		OnPropertyChanged(nameof(DevicePorts));
-		_bleWatcher.Start();		
+		if (port == null || _slappyDevice?.Driver?.Port == port)
+		{
+			if (port != null)
+			{
+				var p = _devicePorts.FirstOrDefault(t => t.Address == port.Address);
+				if (p != null)
+				{
+					Application.Current.Dispatcher.Invoke(() => { _devicePorts.Remove(p); });
+				}
+			}
+
+			_slappyDevice = null;
+			ConnectingDeviceAddress = null;
+			WiFiStatusCode = (int)ReceiveMessage.ResultCode.WiFiDisconnected;
+			OnPropertyChanged(nameof(IsSlappyBellConnected));
+			OnPropertyChanged(nameof(ConnectedDeviceAddress));
+			OnPropertyChanged(nameof(ConnectedDeviceText));
+			OnPropertyChanged(nameof(DevicePorts));
+			_bleWatcher.Start();
+		}
 	}
 	
 	public void CommitSlappyBellConnection()
@@ -440,7 +452,7 @@ public class MainViewModel : INotifyPropertyChanged
 		{
 			if (port.Address == _slappyDevice?.Driver?.Port.Address)
 			{
-				OnSlappyBellDisconnected();
+				OnSlappyBellDisconnected(_slappyDevice.Driver.Port);
 			}
 			Application.Current.Dispatcher.Invoke(() =>
 			{
@@ -501,9 +513,9 @@ public class MainViewModel : INotifyPropertyChanged
 				_bleWatcher.Start();
 			}
 		};
-		slappyBellController.SlappyDeviceDisconnected += (sender, e) =>
+		slappyBellController.SlappyDeviceDisconnected += (sender, device) =>
 		{
-			OnSlappyBellDisconnected();
+			OnSlappyBellDisconnected(device.Driver?.Port);
 		};
 		
 		router.OnNotifySourceChange += (_, e) =>

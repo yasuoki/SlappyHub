@@ -50,6 +50,7 @@ public partial class App : Application
         StartPipeServer();
         base.OnStartup(e);
         var sc = new ServiceCollection();
+        sc.AddSingleton<PowerWatcher>();
         sc.AddSingleton<UsbWatcher>();
         sc.AddSingleton<BleWatcher>();
         sc.AddSingleton<SettingsStore>();
@@ -76,6 +77,7 @@ public partial class App : Application
         _ = Services.GetRequiredService<SlappyBellController>().Start();
         Services.GetRequiredService<UsbWatcher>().Start();
         Services.GetRequiredService<BleWatcher>().Start();
+        Services.GetRequiredService<PowerWatcher>().Start();
         
         InitializeTrayIcon();
     }
