@@ -101,6 +101,7 @@ onNotify = function(app, title, body) {
 			var e = new NotificationEvent("thunderbird","[Mail]",sender,body);
 			e.LedPattern = "ff0000,00ff00";
 			e.Sound = "butuyoku.mp3";
+            return e;
 		}
 	}
 	return null;
