@@ -105,8 +105,14 @@ public class SlappyBellController
 			if (settings.WiFiPassword != null && oldSettings.WiFiPassword != null &&
 			    settings.WiFiPassword != oldSettings.WiFiPassword)
 			{
-				updateWifi = SettingsStore.UnprotectString(settings.WiFiPassword) !=
-				             SettingsStore.UnprotectString(oldSettings.WiFiPassword);
+				try
+				{
+					updateWifi = SettingsStore.UnprotectString(settings.WiFiPassword) !=
+					             SettingsStore.UnprotectString(oldSettings.WiFiPassword);
+				}
+				catch (Exception)
+				{
+				}
 			}
 			else if (settings.WiFiPassword == null && oldSettings.WiFiPassword != null)
 			{
