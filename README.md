@@ -46,8 +46,8 @@ Windowsの通知を監視するモードでは、Slack側の設定が不要な�
 
 ## System Requirements
 - SlappyBell デバイス
-- Windows 11
-- .NET 9.0
+- Windows 11 PC（SlappyBellとの接続に、USBの空きポート1個 または Bletooth LE が必要です）
+- .NET 10.0 実行環境
 - Windows版 Slack デスクトップアプリケーション（ブラウザ版は非対応）
 
 ## Slack ボット連携
@@ -174,4 +174,7 @@ ViewChangeEvent(source,channel,sender)
 ### ログの出力
 記述したJavaScriptにエラーがあったり例外が発生すると、`slappy_extension.js`ファイルと同じディレクトリに`slappy_hub.log`ファイルにその内容がログ出力されます。  
 また、Log.print(text)関数を呼び出すことでも、ログを出力できます。
+
+
+
 
